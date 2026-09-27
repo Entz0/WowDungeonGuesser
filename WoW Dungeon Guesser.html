@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World of Warcraft - Dungeon Guesser</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700;900&family=Metamorphous&family=Open+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --wow-gold: #f8b700;
+            --wow-gold-dark: #b8860b;
+            --wow-gold-light: #ffd700;
+            --wow-border: #4a3b2c;
+            --wow-bg-dark: #090807;
+            --wow-panel-bg: rgba(18, 14, 11, 0.94);
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: var(--wow-bg-dark);
+            background-image:
+                radial-gradient(circle at center, rgba(35, 22, 10, 0.7) 0%, rgba(5, 5, 5, 0.98) 100%),
+                radial-gradient(circle at 50% 20%, rgba(120, 55, 10, 0.16), transparent 55%);
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: #e2d3b5;
+        }
+
+        .font-warcraft {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.05em;
+        }
+
+        .font-warcraft-title {
+            font-family: 'Cinzel Decorative', 'Cinzel', serif;
+        }
+
+        .font-medieval {
+            font-family: 'Metamorphous', cursive;
+        }
+
+        /* Warcraft Frame Styling */
+        .wow-frame {
+            background: var(--wow-panel-bg);
+            border: 2px solid var(--wow-gold-dark);
+            box-shadow:
+                0 0 0 1px #000,
+                inset 0 0 20px rgba(0, 0, 0, 0.9),
+                0 15px 35px rgba(0, 0, 0, 0.9);
+            position: relative;
+        }
+
+        .wow-frame-gold {
+            border: 2px solid var(--wow-gold);
+            box-shadow:
+                0 0 15px rgba(248, 183, 0, 0.25),
+                inset 0 0 20px rgba(0, 0, 0, 0.95);
+        }
+
+        /* Frame Corner Accents */
+        .wow-corner {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: var(--wow-gold-light);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .wow-corner-tl {
+            top: -3px;
+            left: -3px;
+            border-top: 3px solid;
+            border-left: 3px solid;
+        }
+
+        .wow-corner-tr {
+            top: -3px;
+            right: -3px;
+            border-top: 3px solid;
+            border-right: 3px solid;
+        }
+
+        .wow-corner-bl {
+            bottom: -3px;
+            left: -3px;
+            border-bottom: 3px solid;
+            border-left: 3px solid;
+        }
+
+        .wow-corner-br {
+            bottom: -3px;
+            right: -3px;
+            border-bottom: 3px solid;
+            border-right: 3px solid;
+        }
+
+        /* Custom Warcraft Buttons */
+        .btn-wow {
+            background: linear-gradient(180deg, #7a1f14 0%, #450d07 100%);
+            border: 1px solid var(--wow-gold);
+            color: #f0e6d2;
+            text-shadow: 1px 1px 2px #000;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 8px rgba(0, 0, 0, 0.6);
+            transition: all 0.15s ease;
+        }
+
+        .btn-wow:hover:not(:disabled) {
+            background: linear-gradient(180deg, #99291b 0%, #5e130a 100%);
+            color: #ffffff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 12px rgba(248, 183, 0, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-wow:active:not(:disabled) {
+            background: linear-gradient(180deg, #2b0804 0%, #4a1009 100%);
+            transform: translateY(1px);
+        }
+
+        .btn-wow:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+        }
+
+        .btn-wow-secondary {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            border: 1px solid #718096;
+        }
+
+        .btn-wow-secondary:hover:not(:disabled) {
+            background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
+            border-color: var(--wow-gold);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d0b09;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4a3b2c;
+            border: 1px solid var(--wow-gold-dark);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6e543c;
+        }
+
+        /* Text Effects */
+        .text-glow-gold {
+            text-shadow: 0 0 8px rgba(248, 183, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .text-glow-green {
+            text-shadow: 0 0 8px rgba(34, 197, 94, 0.7), 0 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .text-glow-red {
+            text-shadow: 0 0 8px rgba(239, 68, 68, 0.7), 0 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Image Vignette */
+        #dungeon-image {
+            background: #080604;
+        }
+
+        .img-vignette::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-600 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="w-full bg-black/85 border-b border-amber-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <h1
+                    class="font-warcraft-title text-xl md:text-2xl text-amber-400 font-bold tracking-wider text-glow-gold">
+                    WoW Dungeon Guesser
+                </h1>
+            </div>
+
+            <!-- Global Stats Bar -->
+            <div class="flex items-center gap-3 md:gap-4 text-xs md:text-sm font-warcraft">
+                <div class="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded border border-amber-900/50">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span class="text-gray-400">Score:</span>
+                    <span id="header-score" class="text-amber-300 font-bold">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded border border-amber-900/50">
+                    <i class="fa-solid fa-star text-yellow-400"></i>
+                    <span class="text-gray-400">Best:</span>
+                    <span id="header-highscore" class="text-yellow-300 font-bold">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded border border-amber-900/50">
+                    <i class="fa-solid fa-fire text-orange-500"></i>
+                    <span class="text-gray-400">Streak:</span>
+                    <span id="header-streak" class="text-orange-400 font-bold">0</span>
+                </div>
+                <button id="btn-difficulty-toggle"
+                    class="bg-amber-950/70 hover:bg-amber-900/90 text-amber-300 border border-amber-700/60 px-2.5 py-1.5 rounded text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-filter text-amber-400"></i>
+                    <span id="current-filter-text">All Expansions</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6 w-full flex-grow flex flex-col justify-center">
+
+        <!-- Game Card Frame -->
+        <div class="wow-frame wow-frame-gold rounded-lg p-4 md:p-6 mb-6">
+            <div class="wow-corner wow-corner-tl"></div>
+            <div class="wow-corner wow-corner-tr"></div>
+            <div class="wow-corner wow-corner-bl"></div>
+            <div class="wow-corner wow-corner-br"></div>
+
+            <!-- Top Metadata Controls -->
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <span id="badge-expansion"
+                        class="bg-amber-950 text-amber-300 border border-amber-600 text-xs font-semibold uppercase px-2.5 py-0.5 rounded shadow">
+                        Classic
+                    </span>
+                    <span id="hint-revealed-count" class="text-xs text-gray-400 hidden sm:inline">
+                        (Hints Used: <span id="hints-count">0</span>/3)
+                    </span>
+                </div>
+                <div class="text-xs text-amber-200/70 font-warcraft">
+                    Dungeon <span id="dungeon-progress-num">1</span>
+                </div>
+            </div>
+
+            <!-- Dungeon Image Screen Area -->
+            <div
+                class="relative w-full h-64 sm:h-80 md:h-96 rounded border-2 border-amber-900/80 overflow-hidden bg-black mb-4 img-vignette group">
+                <img id="dungeon-image" src="" alt="WoW Dungeon Screenshot"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+
+                <!-- Zoom Lightbox Button -->
+                <button id="btn-zoom-image"
+                    class="absolute top-3 right-3 bg-black/70 hover:bg-black/90 text-amber-300 border border-amber-600/70 p-2 rounded-md text-xs backdrop-blur-sm transition z-20 flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i> <span class="hidden sm:inline">Zoom Image</span>
+                </button>
+
+                <!-- Loading Spinner -->
+                <div id="image-loader"
+                    class="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-500"></i>
+                    <span class="font-warcraft text-sm text-amber-200">Summoning Screenshot...</span>
+                </div>
+
+                <!-- Answer Overlay (Success / Skip display) -->
+                <div id="answer-overlay"
+                    class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-4 z-30 hidden backdrop-blur-sm">
+                    <h2 id="overlay-title" class="text-2xl md:text-4xl font-warcraft-title font-bold text-center mb-2">
+                        CORRECT!
+                    </h2>
+                    <p id="overlay-dungeon-name"
+                        class="text-xl md:text-2xl font-warcraft text-amber-300 text-center mb-2">
+                        Deadmines
+                    </p>
+                    <p id="overlay-expansion-name" class="text-sm text-gray-300 italic mb-6">
+                        Classic World of Warcraft
+                    </p>
+                    <button id="btn-next-overlay"
+                        class="btn-wow font-warcraft px-7 py-3 rounded-md text-base tracking-wide flex items-center gap-2">
+                        Next Dungeon <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hints Section -->
+            <div class="mb-4 bg-black/50 rounded border border-amber-900/50 p-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <span
+                        class="text-xs uppercase font-warcraft text-amber-400 tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i> Tactical Intel (Hints)
+                    </span>
+                    <button id="btn-reveal-hint"
+                        class="text-xs bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 px-3 py-1 rounded transition flex items-center gap-1">
+                        <i class="fa-solid fa-key text-xs"></i> Unlock Hint (<span id="hint-cost-text">-50 pts</span>)
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div class="bg-amber-950/30 p-2.5 rounded border border-amber-900/30">
+                        <span class="text-amber-500/90 block font-semibold mb-0.5">Location / Zone:</span>
+                        <span id="hint-zone" class="text-gray-400 italic">???</span>
+                    </div>
+                    <div class="bg-amber-950/30 p-2.5 rounded border border-amber-900/30">
+                        <span class="text-amber-500/90 block font-semibold mb-0.5">Key Boss / Encounter:</span>
+                        <span id="hint-boss" class="text-gray-400 italic">???</span>
+                    </div>
+                    <div class="bg-amber-950/30 p-2.5 rounded border border-amber-900/30">
+                        <span class="text-amber-500/90 block font-semibold mb-0.5">Lore / Feature:</span>
+                        <span id="hint-lore" class="text-gray-400 italic">???</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form & Input Section -->
+            <div class="relative mb-3">
+                <form id="guess-form" onsubmit="return false;" class="flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-grow">
+                        <input type="text" id="dungeon-input"
+                            placeholder="Type dungeon name or shorthand (e.g. Deadmines, Ramps, HoV)..."
+                            autocomplete="off"
+                            class="w-full bg-black/80 border-2 border-amber-800 focus:border-amber-400 text-amber-100 placeholder-amber-900/70 px-4 py-3 rounded text-sm focus:outline-none transition shadow-inner font-sans" />
+                        <!-- Autocomplete Suggestions List -->
+                        <ul id="autocomplete-list"
+                            class="absolute left-0 right-0 top-full mt-1 bg-neutral-900/95 border-2 border-amber-700 rounded-md shadow-2xl max-h-56 overflow-y-auto z-40 hidden divide-y divide-amber-900/40">
+                        </ul>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" id="btn-submit-guess"
+                            class="btn-wow font-warcraft px-6 py-3 rounded font-bold text-sm flex-1 sm:flex-none flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-crosshairs"></i> Guess
+                        </button>
+                        <button type="button" id="btn-skip"
+                            class="btn-wow btn-wow-secondary font-warcraft px-4 py-3 rounded text-sm text-gray-300 hover:text-white flex items-center justify-center gap-1.5"
+                            title="Give up and skip">
+                            <i class="fa-solid fa-forward"></i> Skip
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Feedback Message Banner -->
+            <div id="feedback-message"
+                class="hidden p-3 rounded border text-sm font-semibold flex items-center justify-between transition-all">
+                <span id="feedback-text">Incorrect guess! Try again.</span>
+                <i id="feedback-icon" class="fa-solid fa-xmark"></i>
+            </div>
+
+        </div>
+
+        <!-- Image Lightbox Modal -->
+        <div id="image-modal"
+            class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4 hidden backdrop-blur-md">
+            <div class="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center">
+                <button id="btn-close-modal"
+                    class="absolute -top-10 right-0 text-amber-400 hover:text-amber-200 text-2xl p-2 font-bold">
+                    <i class="fa-solid fa-xmark"></i> Close
+                </button>
+                <img id="modal-image" src="" alt="Full Screen Dungeon"
+                    class="max-w-full max-h-[85vh] object-contain rounded border-2 border-amber-600 shadow-2xl">
+            </div>
+        </div>
+
+        <!-- Expansion Filter Modal -->
+        <div id="filter-modal"
+            class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-xs">
+            <div class="wow-frame wow-frame-gold max-w-md w-full rounded-lg p-5">
+                <h3 class="text-xl font-warcraft-title text-amber-400 mb-3 border-b border-amber-800 pb-2">
+                    Filter Expansions
+                </h3>
+                <p class="text-xs text-gray-300 mb-4">Select which WoW expansions to include in your pool:</p>
+
+                <div id="expansion-checkboxes" class="space-y-2 max-h-60 overflow-y-auto pr-2 mb-5">
+                    <!-- Checkboxes populated via JS -->
+                </div>
+
+                <div class="flex justify-between items-center border-t border-amber-900/60 pt-3">
+                    <div class="flex gap-2">
+                        <button id="btn-select-all" class="text-xs text-amber-400 hover:underline">Select All</button>
+                        <span class="text-xs text-gray-600">•</span>
+                        <button id="btn-clear-all" class="text-xs text-amber-400 hover:underline">Clear All</button>
+                    </div>
+                    <button id="btn-close-filter" class="btn-wow font-warcraft px-5 py-2 rounded text-sm">
+                        Apply & Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer
+        class="w-full bg-black/85 border-t border-amber-950 py-3 text-center text-xs text-amber-700/80 font-warcraft">
+        World of Warcraft Dungeon Guesser &bull; Quiz Project
+    </footer>
+
+    <script>
+        // High-reliability curated direct dungeon images with robust SVG procedural fallbacks
+        const DUNGEON_DATABASE = [
+            // CLASSIC
+            {
+                name: "Deadmines",
+                expansion: "Classic",
+                zone: "Westfall",
+                boss: "Edwin VanCleef",
+                lore: "Defias Brotherhood secret pirate ship hideout in Moonbrook",
+                aliases: ["dm", "deadmines", "the deadmines"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/78669-the-deadmines.jpg",
+                backupImage: "https://static.wikia.nocookie.net/wowpedia/images/1/12/LoadingScreenDeadmines.jpg"
+            },
+            {
+                name: "Wailing Caverns",
+                expansion: "Classic",
+                zone: "The Barrens",
+                boss: "Mutanus the Devourer",
+                aliases: ["wc", "wailing caverns"],
+                lore: "Druids of the Fang corrupted inside steam fissures",
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/86186-wailing-caverns.jpg"
+            },
+            {
+                name: "Scarlet Monastery",
+                expansion: "Classic",
+                zone: "Tirispal Glades",
+                boss: "High Inquisitor Whitemane",
+                lore: "Zaletan crusader stronghold zealously fighting undead",
+                aliases: ["sm", "scarlet", "sm lib", "sm cath", "sm armory"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/68359-scarlet-monastery-courtyard-scarlet-monastery-armoury.jpg"
+            },
+            {
+                name: "Zul'Farrak",
+                expansion: "Classic",
+                zone: "Tanaris",
+                boss: "Gahz'rilla",
+                lore: "Sandfury troll pyramid city hidden in desert sands",
+                aliases: ["zf", "zulfarrak", "zul farrak"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/9195-zulfarrak.jpg"
+            },
+            {
+                name: "Stratholme",
+                expansion: "Classic",
+                zone: "Eastern Plaguelands",
+                boss: "Baron Rivendare",
+                lore: "Plagued city purged by Arthas, filled with Scourge",
+                aliases: ["strat", "stratholme", "strat ud", "strat live"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/934237-stratholme.jpg"
+            },
+            {
+                name: "Scholomance",
+                expansion: "Classic",
+                zone: "Western Plaguelands",
+                boss: "Darkmaster Gandling",
+                lore: "Necromantic academy beneath Caer Darrow island",
+                aliases: ["scholo", "scholomance"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/67442-scholomance.jpg"
+            },
+            {
+                name: "Blackrock Depths",
+                expansion: "Classic",
+                zone: "Blackrock Mountain",
+                boss: "Emperor Dagran Thaurissan",
+                lore: "Massive subterranean capital of the Dark Iron Dwarves",
+                aliases: ["brd", "blackrock depths"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/65414-blackrock-depths.jpg"
+            },
+
+            // THE BURNING CRUSADE
+            {
+                name: "Hellfire Ramparts",
+                expansion: "The Burning Crusade",
+                zone: "Hellfire Peninsula",
+                boss: "Vazruden the Herald",
+                lore: "Fortress guarding the Citadel in Outland red wastes",
+                aliases: ["ramps", "hellfire ramparts", "rampart", "ramparts"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/254491-hellfire-ramparts.jpg"
+            },
+            {
+                name: "The Blood Furnace",
+                expansion: "The Burning Crusade",
+                zone: "Hellfire Peninsula",
+                boss: "Keli'dan the Breaker",
+                lore: "Shattered Hand laboratory extracting pit lord demon blood",
+                aliases: ["bf", "blood furnace"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/14438-the-blood-furnace.jpg"
+            },
+            {
+                name: "The Slave Pens",
+                expansion: "The Burning Crusade",
+                zone: "Zangarmarsh",
+                boss: "Quagmirran",
+                lore: "Coilfang Naga prison camp draining the Marsh waters",
+                aliases: ["sp", "slave pens"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/14915-the-slave-pens-inside-the-slave-pens.jpg"
+            },
+            {
+                name: "Karazhan",
+                expansion: "The Burning Crusade",
+                zone: "Deadwind Pass",
+                boss: "Prince Malchezaar",
+                lore: "Haunted mystical tower of the Guardian Medivh",
+                aliases: ["kara", "karazhan"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/22268-karazhan-gamesmans-hall-this-is-where-you-do-the-chess-event-after-beating-the.jpg"
+            },
+            {
+                name: "Magisters' Terrace",
+                expansion: "The Burning Crusade",
+                zone: "Isle of Quel'Danas",
+                boss: "Kael'thas Sunstrider",
+                lore: "Fel-infused sanctum of the fallen Sunstrider king",
+                aliases: ["mgt", "magisters terrace"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/72962-magisters-terrace-kaelthas-sunstrider-room.jpg"
+            },
+
+            // WRATH OF THE LICH KING
+            {
+                name: "Utgarde Keep",
+                expansion: "Wrath of the Lich King",
+                zone: "Howling Fjord",
+                boss: "Ingvar the Plunderer",
+                lore: "Vrykul stronghold perched over the fjord bluffs",
+                aliases: ["uk", "utgarde keep"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/89450-utgarde-keep.jpg"
+            },
+            {
+                name: "The Nexus",
+                expansion: "Wrath of the Lich King",
+                zone: "Borean Tundra",
+                boss: "Grand Magus Telestra",
+                lore: "Arcane dragon lair inside Coldarra ice cavern",
+                aliases: ["nexus", "the nexus"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/246557-the-nexus-not-enough-blue.jpg"
+            },
+            {
+                name: "Halls of Lightning",
+                expansion: "Wrath of the Lich King",
+                zone: "The Storm Peaks",
+                boss: "Loken",
+                lore: "Titan facility corrupted by the Old God Yogg-Saron",
+                aliases: ["hol", "halls of lightning"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/94685-halls-of-lightning.jpg"
+            },
+            {
+                name: "Pit of Saron",
+                expansion: "Wrath of the Lich King",
+                zone: "Icecrown",
+                boss: "Scourgelord Tyrannus",
+                lore: "Slave quarry and saronite mine below Icecrown Citadel",
+                aliases: ["pos", "pit of saron"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/165938-pit-of-saron.jpg"
+            },
+
+            // CATACLYSM
+            {
+                name: "Blackrock Caverns",
+                expansion: "Cataclysm",
+                zone: "Blackrock Mountain",
+                boss: "Ascendant Lord Obsidius",
+                lore: "Subterranean stronghold where Twilight's Hammer cultists construct magma elementals and twist red dragon eggs",
+                aliases: ["brc", "blackrock caverns"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/172742-blackrock-caverns-twilight-camp.jpg"
+            },
+            {
+                name: "The Stonecore",
+                expansion: "Cataclysm",
+                zone: "Deepholm",
+                boss: "High Priestess Azil",
+                lore: "Temple nestled within the Earth realm where the Twilight's Hammer labored over Deathwing's elementium armor",
+                aliases: ["sc", "stonecore", "the stonecore"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/173119-the-stonecore-final-boss-area.jpg"
+            },
+            {
+                name: "Vortex Pinnacle",
+                expansion: "Cataclysm",
+                zone: "Abyssal Breach / Skywall",
+                boss: "Asaad, Caliph of Zephyrs",
+                lore: "Floating elemental sanctuary in the sky wall governed by the air elementals loyal to Al'Akir",
+                aliases: ["vp", "vortex", "vortex pinnacle"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/183103-the-vortex-pinnacle.jpg"
+            },
+            {
+                name: "Grim Batol",
+                expansion: "Cataclysm",
+                zone: "Twilight Highlands",
+                boss: "Erudax",
+                lore: "Ancient Wildhammer fortress corrupted into a breeding ground for Twilight Dragonflight monstrosities",
+                aliases: ["gb", "grim batol"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/172784-grim-batol-main-corridor.jpg"
+            },
+            {
+                name: "Halls of Origination",
+                expansion: "Cataclysm",
+                zone: "Uldum",
+                boss: "Rajh, Lord of Sun",
+                lore: "Titan facility housing the re-origination device capable of purging all life on Azeroth to reset the titan vision",
+                aliases: ["hoo", "halls of origination"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/172807-halls-of-origination-big-chamber-with-2-puzzles-and-mirrors-reflecting-lights.jpg"
+            },
+
+            // MISTS OF PANDARIA
+            {
+                name: "Temple of the Jade Serpent",
+                expansion: "Mists of Pandaria",
+                zone: "Jade Forest",
+                boss: "Sha of Doubt",
+                lore: "Sacred pandaren temple overrun by manifestations of Doubt",
+                aliases: ["tjs", "temple of the jade serpent"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/333587-temple-of-the-jade-serpent-wise-maris-room.jpg"
+            },
+            {
+                name: "Stormstout Brewery",
+                expansion: "Mists of Pandaria",
+                zone: "Valley of the Four Winds",
+                boss: "Yan-Zhu the Uncorked",
+                lore: "Historic brewery overrun by virmen, hozen, and wild ale elementals",
+                aliases: ["sb", "brewery", "stormstout brewery"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/351919-stormstout-brewery-hozen-party-room.jpg"
+            },
+            {
+                name: "Shado-Pan Monastery",
+                expansion: "Mists of Pandaria",
+                zone: "Kun-Lai Summit",
+                boss: "Taran Zhu",
+                lore: "Training ground of the Shado-Pan, corrupted by the Sha of Violence and Hatred",
+                aliases: ["spm", "shado-pan monastery"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/351951-shado-pan-monastery-fighting-trainees.jpg"
+            },
+            {
+                name: "Mogu'shan Palace",
+                expansion: "Mists of Pandaria",
+                zone: "Vale of Eternal Blossoms",
+                boss: "Xin the Weaponmaster",
+                lore: "Ancient seat of mogu power housing imperial relics and dangerous armies",
+                aliases: ["msp", "mogushan palace"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/369344-mogushan-palace.jpg"
+            },
+
+            // WARLORDS OF DRAENOR
+            {
+                name: "Bloodmaul Slag Mines",
+                expansion: "Warlords of Draenor",
+                zone: "Frostfire Ridge",
+                boss: "Gug'rokk",
+                lore: "Subjugated mine operation where the Bloodmaul ogres force slaves to harvest elemental minerals",
+                aliases: ["bsm", "bloodmaul", "bloodmaul slag mines"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/420288-bloodmaul-slag-mines.jpg"
+            },
+            {
+                name: "Iron Docks",
+                expansion: "Warlords of Draenor",
+                zone: "Gorgrond",
+                boss: "Skulloc",
+                lore: "Industrial naval shipyard fueling the Iron Horde's massive war machine and ironclad fleet",
+                aliases: ["id", "docks", "iron docks"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/423046-iron-docks-oshir-yeah-suuuure.jpg"
+            },
+            {
+                name: "Auchindoun",
+                expansion: "Warlords of Draenor",
+                zone: "Talador",
+                boss: "Teron'gor",
+                lore: "Sacred mausoleum of the draenei souls under siege by Gul'dan and the Shadow Council",
+                aliases: ["auch", "auchindoun"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/908454-auchindoun.jpg"
+            },
+            {
+                name: "Skyreach",
+                expansion: "Warlords of Draenor",
+                zone: "Spires of Arak",
+                boss: "High Sage Viryx",
+                lore: "Majestic high-altitude seat of power for the High Arakkoa, wielding solar destruction magic",
+                aliases: ["sr", "skyreach"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/473938-skyreach.jpg"
+            },
+            {
+                name: "Shadowmoon Burial Grounds",
+                expansion: "Warlords of Draenor",
+                zone: "Shadowmoon Valley",
+                boss: "Ner'zhul",
+                lore: "Ancestral resting place of the Shadowmoon clan, desecrated by Ner'zhul's dark void magic",
+                aliases: ["sbg", "shadowmoon", "shadowmoon burial grounds"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/423893-shadowmoon-burial-grounds.jpg"
+            },
+
+            // LEGION
+            {
+                name: "Halls of Valor",
+                expansion: "Legion",
+                zone: "Stormheim",
+                boss: "Odyn",
+                lore: "Golden celestial realm where Valarjar warriors prove worth",
+                aliases: ["hov", "halls of valor"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/562178-halls-of-valor-the-long-journey-to-odyn.jpg"
+            },
+            {
+                name: "Court of Stars",
+                expansion: "Legion",
+                zone: "Suramar",
+                boss: "Advisor Melandrus",
+                lore: "Nightborne masquerade party under Nightwell moonlight",
+                aliases: ["cos", "court of stars"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/572186-court-of-stars.jpg"
+            },
+
+            // BATTLE FOR AZEROTH
+            {
+                name: "Freehold",
+                expansion: "Battle for Azeroth",
+                zone: "Tiragarde Sound",
+                boss: "Harlan Sweete",
+                lore: "A haven for pirates, cutthroats, and rogue sailors under the rule of the Irontide Raiders",
+                aliases: ["fh", "freehold"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/770899-freehold.jpg"
+            },
+            {
+                name: "Atal'Dazar",
+                expansion: "Battle for Azeroth",
+                zone: "Zuldazar",
+                boss: "Yazma",
+                lore: "Ancient resting place of the Zandalari kings, desecrated by Prophet Zul and his dark ritualists",
+                aliases: ["ad", "atal", "ataldazar"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/770072-ataldazar.jpg"
+            },
+            {
+                name: "Waycrest Manor",
+                expansion: "Battle for Azeroth",
+                zone: "Drustvar",
+                boss: "Gorak Tul",
+                lore: "Ancestral home of House Waycrest, fallen into darkness after Lord and Lady Waycrest struck a pact with the Drust",
+                aliases: ["wm", "waycrest", "waycrest manor"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/902618-waycrest-manor.jpg"
+            },
+            {
+                name: "Mechagon Workshop",
+                expansion: "Battle for Azeroth",
+                zone: "Mechagon Island",
+                boss: "King Mechagon",
+                lore: "High-tech subterranean realm of the mecha-gnomes, where King Mechagon plots to purge organic life",
+                aliases: ["workshop", "mechagon workshop", "junker junk"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1292945-operation-mechagon.jpg"
+            },
+
+            // SHADOWLANDS
+            {
+                name: "The Necrotic Wake",
+                expansion: "Shadowlands",
+                zone: "Bastion",
+                boss: "Nalthor the Rimebinder",
+                lore: "Bastion stronghold invaded by the undead forces of Maldraxxus intent on harvesting kyrian anima",
+                aliases: ["nw", "necrotic wake", "the necrotic wake"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/922202-the-necrotic-wake.jpg"
+            },
+            {
+                name: "Halls of Atonement",
+                expansion: "Shadowlands",
+                zone: "Revendreth",
+                boss: "Lord Chamberlain",
+                lore: "Grand cathedral designed for soul redemption, corrupted by Lord Chamberlain for sire Denathrius's anima hoarding",
+                aliases: ["hoa", "halls", "halls of atonement"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1231070.jpg"
+            },
+            {
+                name: "Mists of Tirna Scithe",
+                expansion: "Shadowlands",
+                zone: "Ardenweald",
+                boss: "Mistcaller",
+                lore: "Sacred grove protecting sleeping wild gods, under attack by the Drust seeking to drain its vital anima",
+                aliases: ["mists", "mists of tirna scithe", "mots"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1181537.jpg"
+            },
+            {
+                name: "Spires of Ascension",
+                expansion: "Shadowlands",
+                zone: "Bastion",
+                boss: "Devos, Paragon of Doubt",
+                lore: "Sanctum atop Bastion where Devos and her Forsworn rebels challenge the Archon and the Kyrian Path",
+                aliases: ["soa", "spires", "spires of ascension"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1002911-spires-of-ascension.jpg"
+            },
+            {
+                name: "De Other Side",
+                expansion: "Shadowlands",
+                zone: "Ardenweald",
+                boss: "Mueh'zala",
+                lore: "Bwonsamdi's pocket realm in the Shadowlands, under siege by the ancient loa of death Mueh'zala",
+                aliases: ["dos", "de other side", "other side"],
+                image: "https://wow.zamimg.com/uploads/guide/images/23155.jpg"
+            },
+
+            // DRAGONFLIGHT
+            {
+                name: "Algeth'ar Academy",
+                expansion: "Dragonflight",
+                zone: "Thaldraszus",
+                boss: "Echo of Doragosa",
+                lore: "Ancient dragon college of higher learning, recently reopened to educate the next generation of dragons and allies",
+                aliases: ["aa", "academy", "algethar academy"],
+                image: "https://wow.zamimg.com/uploads/guide/images/29046.jpg?maxWidth=600"
+            },
+            {
+                name: "Ruby Life Pools",
+                expansion: "Dragonflight",
+                zone: "The Waking Shores",
+                boss: "Kyrakka and Erhart Stormvein",
+                lore: "Sacred nesting grounds of the Red Dragonflight, under attack by Primalist forces seeking to corrupt the dragon eggs",
+                aliases: ["rlp", "ruby life pools", "ruby"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1087564-ruby-life-pools.jpg"
+            },
+            {
+                name: "The Azure Vault",
+                expansion: "Dragonflight",
+                zone: "The Azure Span",
+                boss: "Umbrelskul",
+                lore: "Arcane repository created by Malygos to lock away magical artifacts and chaotic arcane anomalies",
+                aliases: ["av", "azure vault", "the azure vault"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1094390-the-azure-vault-azure-vaults-dungeon-is-amongst-the-new-spots-that-are-gorgeous.jpg"
+            },
+            {
+                name: "Nokhud Offensive",
+                expansion: "Dragonflight",
+                zone: "Ohn'ahran Plains",
+                boss: "Balakar Khan",
+                lore: "Sprawling outdoor battlefield where the rogue Nokhud centaur clan aligns with Primalists to capture the Wind Eagle spirit",
+                aliases: ["no", "nokhud", "nokhud offensive"],
+                image: "https://wow.zamimg.com/uploads/guide/images/26553.jpg"
+            },
+            {
+                name: "Brackenhide Hollow",
+                expansion: "Dragonflight",
+                zone: "The Azure Span",
+                boss: "Decatriarch Wratheye",
+                lore: "Sprawling stronghold of the Brackenhide gnolls, who threaten the forest with widespread decay and rot magic",
+                aliases: ["bh", "brackenhide", "brackenhide hollow"],
+                image: "https://wow.zamimg.com/uploads/guide/images/26764.jpg"
+            },
+
+            // THE WAR WITHIN
+            {
+                name: "The Rookery",
+                expansion: "The War Within",
+                zone: "Isle of Dorn",
+                boss: "Voidstone Monstrosity",
+                lore: "Sacred nesting site of the Stormrooks, corrupt by Void forces seeking to turn the majestic beasts against the Earthen",
+                aliases: ["rookery", "the rookery"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1160170.jpg"
+            },
+            {
+                name: "The Stonevault",
+                expansion: "The War Within",
+                zone: "The Ringing Deeps",
+                boss: "Void Speaker Eirich",
+                lore: "Massive titan facility housing ancient machinery, under threat from High Speaker Eirich's dark transformation",
+                aliases: ["sv", "stonevault", "the stonevault"],
+                image: "https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/c0/C0HA6WG54NIV1723550315743.png"
+            },
+            {
+                name: "Priory of the Sacred Flame",
+                expansion: "The War Within",
+                zone: "Hallowfall",
+                boss: "Prior Merektha",
+                lore: "Grand sanctuary of the Arathi, where zealots have taken hold in their desperate attempt to protect the sacred light",
+                aliases: ["psf", "priory", "priory of the sacred flame"],
+                image: "https://wow.zamimg.com/uploads/screenshots/normal/1264741-priory-of-the-sacred-flame.jpg"
+            },
+            {
+                name: "City of Threads",
+                expansion: "The War Within",
+                zone: "Azj-Kahet",
+                boss: "Fang of the Queen",
+                lore: "Shadowy heart of the Nerubian empire where Queen Ansurek's loyalists plot and experiment with Void corruption",
+                aliases: ["cot", "city of threads"],
+                image: "https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/m0/M0SNQK72G3W31723561279349.png"
+            },
+            {
+                name: "Ara-Kara, City of Echoes",
+                expansion: "The War Within",
+                zone: "Azj-Kahet",
+                boss: "Anub'zekt",
+                lore: "Ruined lower level of Azj-Kahet harvesting the essence of dead nerubians to fuel the Ascended's dark army",
+                aliases: ["ak", "arakara", "ara-kara", "ara kara"],
+                image: "https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/31/31FE5LQ4KYLE1723560816705.png"
+            }
+        ];
+
+        const elements = {
+            score: document.getElementById('header-score'),
+            highScore: document.getElementById('header-highscore'),
+            streak: document.getElementById('header-streak'),
+            dungeonImage: document.getElementById('dungeon-image'),
+            imageLoader: document.getElementById('image-loader'),
+            badgeExpansion: document.getElementById('badge-expansion'),
+            input: document.getElementById('dungeon-input'),
+            autocompleteList: document.getElementById('autocomplete-list'),
+            guessForm: document.getElementById('guess-form'),
+            btnSkip: document.getElementById('btn-skip'),
+            btnRevealHint: document.getElementById('btn-reveal-hint'),
+            hintZone: document.getElementById('hint-zone'),
+            hintBoss: document.getElementById('hint-boss'),
+            hintLore: document.getElementById('hint-lore'),
+            hintsCount: document.getElementById('hints-count'),
+            feedbackMsg: document.getElementById('feedback-message'),
+            feedbackText: document.getElementById('feedback-text'),
+            feedbackIcon: document.getElementById('feedback-icon'),
+            answerOverlay: document.getElementById('answer-overlay'),
+            overlayTitle: document.getElementById('overlay-title'),
+            overlayDungeonName: document.getElementById('overlay-dungeon-name'),
+            overlayExpansionName: document.getElementById('overlay-expansion-name'),
+            btnNextOverlay: document.getElementById('btn-next-overlay'),
+            btnDifficultyToggle: document.getElementById('btn-difficulty-toggle'),
+            filterModal: document.getElementById('filter-modal'),
+            btnCloseFilter: document.getElementById('btn-close-filter'),
+            btnSelectAll: document.getElementById('btn-select-all'),
+            btnClearAll: document.getElementById('btn-clear-all'),
+            expansionCheckboxes: document.getElementById('expansion-checkboxes'),
+            currentFilterText: document.getElementById('current-filter-text'),
+            progressNum: document.getElementById('dungeon-progress-num'),
+            btnZoomImage: document.getElementById('btn-zoom-image'),
+            imageModal: document.getElementById('image-modal'),
+            modalImage: document.getElementById('modal-image'),
+            btnCloseModal: document.getElementById('btn-close-modal')
+        };
+
+        const state = {
+            score: 0,
+            highScore: parseInt(localStorage.getItem('wow_dungeon_highscore')) || 0,
+            streak: 0,
+            hintsRevealed: 0,
+            playedCount: 0,
+            currentIndex: 0,
+            currentDungeon: null,
+            selectedExpansions: [],
+            filteredPool: []
+        };
+
+        // ------------------------------------------------------------------
+        // Procedurally generated dungeon art
+        // ------------------------------------------------------------------
+        // The original build hot-linked real WoW loading-screen images from
+        // third-party CDNs (mostly old Wowpedia/Fandom URLs). Those links
+        // are stale now that Wowpedia moved off Fandom, and even working
+        // image URLs can't be embedded reliably here since hosted pages
+        // can't load arbitrary remote images. Instead, each dungeon gets a
+        // unique generated emblem keyed off its expansion and theme, so art
+        // always renders instantly with no network dependency at all.
+        // ------------------------------------------------------------------
+
+        const EXPANSION_THEMES = {
+            "Classic": ["#1a1208", "#050302", "#c9a227", "#8a6d3b"],
+            "The Burning Crusade": ["#0d1f0a", "#020803", "#7CFC00", "#3e5c1f"],
+            "Wrath of the Lich King": ["#0a1622", "#020608", "#7ec8e3", "#3a6a85"],
+            "Cataclysm": ["#2a0e05", "#0a0301", "#ff5a1f", "#7a2e0a"],
+            "Mists of Pandaria": ["#0a1f16", "#020805", "#4fd1a5", "#1f6b4d"],
+            "Warlords of Draenor": ["#1f1206", "#080401", "#d98a3d", "#7a4a1a"],
+            "Legion": ["#170a22", "#050208", "#b78bff", "#5b3a8a"],
+            "Battle for Azeroth": ["#0a1c1f", "#020606", "#2ec4b6", "#166b63"],
+            "Shadowlands": ["#150a22", "#040207", "#9b6bff", "#4a2e7a"],
+            "Dragonflight": ["#0a1c24", "#020608", "#38bdf8", "#1a5f7a"],
+            "The War Within": ["#1c1508", "#060402", "#d4a24c", "#7a5a1f"]
+        };
+
+        function pickArchetype(d) {
+            const text = `${d.name} ${d.zone} ${d.lore}`.toLowerCase();
+            if (/ship|dock|pirate|cove|harbor|freehold|sail/.test(text)) return 'ship';
+            if (/pyramid|tomb|sand|desert|zandalari|troll/.test(text)) return 'pyramid';
+            if (/vortex|sky|floating|pinnacle|wind/.test(text)) return 'sky';
+            if (/forest|fae|grove|wildseed|nature|druid/.test(text)) return 'nature';
+            if (/furnace|forge|machine|mechanical|shipyard/.test(text)) return 'forge';
+            if (/temple|monastery|academy|sanctum|shrine|crusader|university/.test(text)) return 'temple';
+            if (/cave|cavern|mine|depths|quarry|tunnel|subterranean|fissure/.test(text)) return 'cave';
+            if (/hall|court|celestial|masquerade|valor/.test(text)) return 'hall';
+            return 'tower';
+        }
+
+        function archetypeIcon(type, accent, accent2) {
+            const icons = {
+                ship: `<path d="M480 420 L720 420 L680 470 L520 470 Z" fill="${accent2}"/>
+                    <rect x="595" y="270" width="10" height="150" fill="${accent2}"/>
+                    <path d="M605 280 L680 400 L605 400 Z" fill="${accent}" opacity="0.9"/>
+                    <path d="M595 280 L530 400 L595 400 Z" fill="${accent}" opacity="0.7"/>`,
+                pyramid: `<path d="M600 220 L720 440 L480 440 Z" fill="${accent}" opacity="0.85"/>
+                    <path d="M600 270 L680 420 L520 420 Z" fill="${accent2}" opacity="0.9"/>
+                    <path d="M600 320 L645 400 L555 400 Z" fill="${accent}"/>`,
+                sky: `<circle cx="600" cy="330" r="120" fill="none" stroke="${accent}" stroke-width="4" opacity="0.5"/>
+                    <circle cx="600" cy="330" r="85" fill="none" stroke="${accent}" stroke-width="4" opacity="0.7"/>
+                    <circle cx="600" cy="330" r="50" fill="none" stroke="${accent}" stroke-width="4" opacity="0.9"/>
+                    <path d="M600 280 L620 330 L600 380 L580 330 Z" fill="${accent2}"/>`,
+                nature: `<circle cx="600" cy="290" r="90" fill="${accent2}" opacity="0.85"/>
+                    <circle cx="545" cy="320" r="60" fill="${accent}" opacity="0.6"/>
+                    <circle cx="655" cy="320" r="60" fill="${accent}" opacity="0.6"/>
+                    <rect x="588" y="370" width="24" height="90" fill="${accent2}"/>`,
+                forge: `<path d="M550 430 L650 430 L635 380 L565 380 Z" fill="${accent2}"/>
+                    <rect x="530" y="430" width="140" height="20" fill="${accent2}"/>
+                    <path d="M600 370 C 580 330, 620 310, 600 270 C 640 300, 630 340, 600 370 Z" fill="${accent}"/>`,
+                temple: `<rect x="500" y="380" width="200" height="24" fill="${accent2}"/>
+                    <rect x="520" y="280" width="20" height="100" fill="${accent}"/>
+                    <rect x="590" y="280" width="20" height="100" fill="${accent}"/>
+                    <rect x="660" y="280" width="20" height="100" fill="${accent}"/>
+                    <path d="M505 280 L600 220 L695 280 Z" fill="${accent2}"/>`,
+                cave: `<path d="M520 260 L555 340 L490 340 Z" fill="${accent}" opacity="0.8"/>
+                    <path d="M605 240 L650 350 L560 350 Z" fill="${accent2}" opacity="0.9"/>
+                    <path d="M690 270 L720 340 L660 340 Z" fill="${accent}" opacity="0.7"/>
+                    <path d="M520 420 L555 360 L490 420 Z" fill="${accent2}" opacity="0.6"/>
+                    <path d="M690 410 L720 360 L660 410 Z" fill="${accent}" opacity="0.6"/>`,
+                hall: `<path d="M500 420 L500 320 C 500 260, 700 260, 700 320 L700 420 Z" fill="none" stroke="${accent}" stroke-width="8" opacity="0.85"/>
+                    <rect x="520" y="330" width="16" height="90" fill="${accent2}"/>
+                    <rect x="664" y="330" width="16" height="90" fill="${accent2}"/>
+                    <path d="M600 300 L618 340 L600 380 L582 340 Z" fill="${accent}"/>`,
+                tower: `<rect x="555" y="260" width="90" height="180" fill="${accent2}"/>
+                    <rect x="540" y="230" width="14" height="30" fill="${accent2}"/>
+                    <rect x="570" y="230" width="14" height="30" fill="${accent2}"/>
+                    <rect x="600" y="230" width="14" height="30" fill="${accent2}"/>
+                    <rect x="630" y="230" width="14" height="30" fill="${accent2}"/>
+                    <path d="M600 190 L640 205 L600 220 Z" fill="${accent}"/>`
+            };
+            return icons[type] || icons.tower;
+        }
+
+        function generateDungeonArt(dungeon) {
+            const theme = EXPANSION_THEMES[dungeon.expansion] || EXPANSION_THEMES["Classic"];
+            const [bg1, bg2, accent, accent2] = theme;
+            const icon = archetypeIcon(pickArchetype(dungeon), accent, accent2);
+
+            const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+                <defs>
+                    <radialGradient id="bg" cx="50%" cy="42%" r="65%">
+                        <stop offset="0%" stop-color="${bg1}"/>
+                        <stop offset="100%" stop-color="${bg2}"/>
+                    </radialGradient>
+                    <radialGradient id="glow" cx="50%" cy="42%" r="40%">
+                        <stop offset="0%" stop-color="${accent}" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <rect width="1200" height="700" fill="url(#bg)"/>
+                <rect width="1200" height="700" fill="url(#glow)"/>
+                <rect x="20" y="20" width="1160" height="660" fill="none" stroke="${accent2}" stroke-width="4"/>
+                <rect x="32" y="32" width="1136" height="636" fill="none" stroke="${accent}" stroke-width="1" opacity="0.5"/>
+                <circle cx="600" cy="330" r="180" fill="#000" opacity="0.35" stroke="${accent}" stroke-width="2"/>
+                ${icon}
+                <text x="600" y="560" font-family="Georgia, serif" font-size="26" font-weight="bold"
+                      fill="${accent}" text-anchor="middle" letter-spacing="6" opacity="0.9">${dungeon.expansion.toUpperCase()}</text>
+                <text x="600" y="600" font-family="sans-serif" font-size="15"
+                      fill="#c6b79a" text-anchor="middle" opacity="0.7">A dungeon awaits identification...</text>
+            </svg>`;
+
+            return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+        }
+
+        function loadDungeonImage(dungeon) {
+            const img = elements.dungeonImage;
+            // Try dungeon.image, then dungeon.backupImage, then fall back to
+            // generated art if neither loads (e.g. broken link, offline).
+            const candidates = [dungeon.image, dungeon.backupImage].filter(Boolean);
+            let attempt = 0;
+
+            elements.imageLoader.classList.remove('opacity-0', 'pointer-events-none');
+
+            img.onload = function () {
+                elements.imageLoader.classList.add('opacity-0', 'pointer-events-none');
+            };
+
+            img.onerror = function () {
+                attempt++;
+                if (attempt < candidates.length) {
+                    img.src = candidates[attempt];
+                } else {
+                    img.onerror = null;
+                    img.src = generateDungeonArt(dungeon);
+                }
+            };
+
+            img.src = candidates.length > 0 ? candidates[0] : generateDungeonArt(dungeon);
+        }
+
+        function initGame() {
+            elements.highScore.textContent = state.highScore;
+
+            // Extract unique expansions
+            const expansions = [...new Set(DUNGEON_DATABASE.map(d => d.expansion))];
+            state.selectedExpansions = [...expansions];
+
+            renderFilterCheckboxes(expansions);
+            applyFilterAndResetPool();
+            setupEventListeners();
+            loadNextDungeon();
+        }
+
+        function renderFilterCheckboxes(expansions) {
+            elements.expansionCheckboxes.innerHTML = expansions.map(exp => `
+                <label class="flex items-center gap-2 text-sm text-amber-200 cursor-pointer hover:text-amber-100">
+                    <input type="checkbox" value="${exp}" checked class="exp-checkbox rounded accent-amber-600 bg-black border-amber-800">
+                    <span>${exp}</span>
+                </label>
+            `).join('');
+        }
+
+        function applyFilterAndResetPool() {
+            state.filteredPool = DUNGEON_DATABASE.filter(d =>
+                state.selectedExpansions.includes(d.expansion)
+            );
+
+            if (state.filteredPool.length === 0) {
+                state.filteredPool = [...DUNGEON_DATABASE];
+            }
+
+            shuffleArray(state.filteredPool);
+            state.currentIndex = 0;
+
+            const expCount = state.selectedExpansions.length;
+            const totalExp = [...new Set(DUNGEON_DATABASE.map(d => d.expansion))].length;
+            elements.currentFilterText.textContent = expCount === totalExp ? "All Expansions" : `${expCount} Selected`;
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function loadNextDungeon() {
+            if (state.currentIndex >= state.filteredPool.length) {
+                shuffleArray(state.filteredPool);
+                state.currentIndex = 0;
+            }
+
+            state.currentDungeon = state.filteredPool[state.currentIndex];
+            state.hintsRevealed = 0;
+            state.playedCount++;
+
+            // Reset UI
+            elements.progressNum.textContent = state.playedCount;
+            elements.input.value = '';
+            elements.autocompleteList.classList.add('hidden');
+            elements.answerOverlay.classList.add('hidden');
+            elements.feedbackMsg.classList.add('hidden');
+
+            // Generate this dungeon's art (no network calls involved).
+            loadDungeonImage(state.currentDungeon);
+
+            elements.badgeExpansion.textContent = state.currentDungeon.expansion;
+            resetHintsUI();
+        }
+
+        function resetHintsUI() {
+            elements.hintsCount.textContent = '0';
+            elements.hintZone.textContent = '???';
+            elements.hintBoss.textContent = '???';
+            elements.hintLore.textContent = '???';
+
+            elements.hintZone.className = 'text-gray-400 italic';
+            elements.hintBoss.className = 'text-gray-400 italic';
+            elements.hintLore.className = 'text-gray-400 italic';
+
+            elements.btnRevealHint.disabled = false;
+        }
+
+        function revealNextHint() {
+            if (state.hintsRevealed >= 3) return;
+
+            state.hintsRevealed++;
+            elements.hintsCount.textContent = state.hintsRevealed;
+
+            state.score = Math.max(0, state.score - 50);
+            updateStatsUI();
+
+            if (state.hintsRevealed >= 1) {
+                elements.hintZone.textContent = state.currentDungeon.zone;
+                elements.hintZone.className = 'text-amber-300 font-semibold text-glow-gold';
+            }
+            if (state.hintsRevealed >= 2) {
+                elements.hintBoss.textContent = state.currentDungeon.boss;
+                elements.hintBoss.className = 'text-amber-300 font-semibold text-glow-gold';
+            }
+            if (state.hintsRevealed >= 3) {
+                elements.hintLore.textContent = state.currentDungeon.lore || "Ancient realm of Azerothian battles";
+                elements.hintLore.className = 'text-amber-300 font-semibold text-glow-gold';
+                elements.btnRevealHint.disabled = true;
+            }
+        }
+
+        function checkGuess(guess) {
+            if (!guess || !state.currentDungeon) return;
+
+            const normalized = guess.trim().toLowerCase();
+            const targetName = state.currentDungeon.name.toLowerCase();
+            const aliases = state.currentDungeon.aliases.map(a => a.toLowerCase());
+
+            const isCorrect = normalized === targetName || aliases.includes(normalized);
+
+            if (isCorrect) {
+                handleCorrectGuess();
+            } else {
+                handleIncorrectGuess();
+            }
+        }
+
+        function handleCorrectGuess() {
+            const basePoints = 200;
+            const hintPenalty = state.hintsRevealed * 40;
+            const earnedPoints = Math.max(50, basePoints - hintPenalty);
+
+            state.score += earnedPoints;
+            state.streak += 1;
+
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('wow_dungeon_highscore', state.highScore);
+            }
+
+            updateStatsUI();
+            triggerConfetti();
+
+            elements.overlayTitle.textContent = "CORRECT GUESS!";
+            elements.overlayTitle.className = "text-2xl md:text-4xl font-warcraft-title font-bold text-center mb-2 text-green-400 text-glow-green";
+            elements.overlayDungeonName.textContent = state.currentDungeon.name;
+            elements.overlayExpansionName.textContent = `${state.currentDungeon.expansion} • +${earnedPoints} pts`;
+            elements.answerOverlay.classList.remove('hidden');
+
+            state.currentIndex++;
+        }
+
+        function handleIncorrectGuess() {
+            showFeedback("Incorrect dungeon name! Try again or unlock a hint.", false);
+        }
+
+        function handleSkip() {
+            state.streak = 0;
+            updateStatsUI();
+
+            elements.overlayTitle.textContent = "SKIPPED";
+            elements.overlayTitle.className = "text-2xl md:text-4xl font-warcraft-title font-bold text-center mb-2 text-red-400 text-glow-red";
+            elements.overlayDungeonName.textContent = state.currentDungeon.name;
+            elements.overlayExpansionName.textContent = `${state.currentDungeon.expansion} • Zone: ${state.currentDungeon.zone}`;
+            elements.answerOverlay.classList.remove('hidden');
+
+            state.currentIndex++;
+        }
+
+        function showFeedback(msg, isSuccess) {
+            elements.feedbackText.textContent = msg;
+            elements.feedbackMsg.classList.remove('hidden', 'bg-green-950/80', 'border-green-600', 'text-green-200', 'bg-red-950/80', 'border-red-600', 'text-red-200');
+
+            if (isSuccess) {
+                elements.feedbackMsg.classList.add('bg-green-950/80', 'border-green-600', 'text-green-200');
+                elements.feedbackIcon.className = 'fa-solid fa-circle-check text-green-400';
+            } else {
+                elements.feedbackMsg.classList.add('bg-red-950/80', 'border-red-600', 'text-red-200');
+                elements.feedbackIcon.className = 'fa-solid fa-circle-xmark text-red-400';
+            }
+        }
+
+        function updateStatsUI() {
+            elements.score.textContent = state.score;
+            elements.highScore.textContent = state.highScore;
+            elements.streak.textContent = state.streak;
+        }
+
+        function triggerConfetti() {
+            try {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: {y: 0.6},
+                    colors: ['#f8b700', '#ffd700', '#22c55e', '#ffffff']
+                });
+            } catch (e) {
+                // Ignore if library unavailable
+            }
+        }
+
+        function updateAutocomplete(query) {
+            if (!query || query.trim().length < 1) {
+                elements.autocompleteList.classList.add('hidden');
+                return;
+            }
+
+            const cleanQuery = query.trim().toLowerCase();
+            const matches = DUNGEON_DATABASE.filter(d =>
+                d.name.toLowerCase().includes(cleanQuery) ||
+                d.aliases.some(a => a.toLowerCase().includes(cleanQuery))
+            ).slice(0, 5);
+
+            if (matches.length === 0) {
+                elements.autocompleteList.classList.add('hidden');
+                return;
+            }
+
+            elements.autocompleteList.innerHTML = matches.map(d => `
+                <li class="px-4 py-2.5 hover:bg-amber-950/80 cursor-pointer flex justify-between items-center text-sm text-amber-100 transition" data-name="${d.name}">
+                    <span class="font-semibold">${d.name}</span>
+                    <span class="text-xs text-amber-500/80 font-warcraft">${d.expansion}</span>
+                </li>
+            `).join('');
+
+            elements.autocompleteList.classList.remove('hidden');
+        }
+
+        function setupEventListeners() {
+            elements.guessForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                checkGuess(elements.input.value);
+            });
+
+            elements.input.addEventListener('input', (e) => {
+                updateAutocomplete(e.target.value);
+            });
+
+            elements.autocompleteList.addEventListener('click', (e) => {
+                const li = e.target.closest('li');
+                if (li) {
+                    const selectedName = li.dataset.name;
+                    elements.input.value = selectedName;
+                    elements.autocompleteList.classList.add('hidden');
+                    checkGuess(selectedName);
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!elements.guessForm.contains(e.target)) {
+                    elements.autocompleteList.classList.add('hidden');
+                }
+            });
+
+            elements.btnSkip.addEventListener('click', handleSkip);
+            elements.btnRevealHint.addEventListener('click', revealNextHint);
+            elements.btnNextOverlay.addEventListener('click', loadNextDungeon);
+
+            // Lightbox Modal Listeners
+            elements.btnZoomImage.addEventListener('click', () => {
+                elements.modalImage.src = elements.dungeonImage.src;
+                elements.imageModal.classList.remove('hidden');
+            });
+
+            elements.btnCloseModal.addEventListener('click', () => {
+                elements.imageModal.classList.add('hidden');
+            });
+
+            elements.imageModal.addEventListener('click', (e) => {
+                if (e.target === elements.imageModal) {
+                    elements.imageModal.classList.add('hidden');
+                }
+            });
+
+            // Filter Modal Handlers
+            elements.btnDifficultyToggle.addEventListener('click', () => {
+                elements.filterModal.classList.remove('hidden');
+            });
+
+            elements.btnSelectAll.addEventListener('click', () => {
+                document.querySelectorAll('.exp-checkbox').forEach(cb => cb.checked = true);
+            });
+
+            elements.btnClearAll.addEventListener('click', () => {
+                document.querySelectorAll('.exp-checkbox').forEach(cb => cb.checked = false);
+            });
+
+            elements.btnCloseFilter.addEventListener('click', () => {
+                const checkedBoxes = document.querySelectorAll('.exp-checkbox:checked');
+                state.selectedExpansions = Array.from(checkedBoxes).map(cb => cb.value);
+                applyFilterAndResetPool();
+                elements.filterModal.classList.add('hidden');
+                loadNextDungeon();
+            });
+        }
+
+        window.onload = function () {
+            initGame();
+        };
+    </script>
+</body>
+
+</html>
