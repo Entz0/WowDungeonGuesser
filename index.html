@@ -229,6 +229,11 @@
             <!-- Global Stats Bar -->
             <div class="flex items-center gap-3 md:gap-4 text-xs md:text-sm font-warcraft">
                 <div class="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded border border-amber-900/50">
+                    <i class="fa-solid fa-[#f8b700] fa-hashtag text-amber-400"></i>
+                    <span class="text-gray-400">Round Progress:</span>
+                    <span id="header-guess-count" class="text-amber-300 font-bold">1/10</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded border border-amber-900/50">
                     <i class="fa-solid fa-trophy text-amber-400"></i>
                     <span class="text-gray-400">Score:</span>
                     <span id="header-score" class="text-amber-300 font-bold">0</span>
@@ -274,7 +279,7 @@
                         </span>
                     </div>
                     <div class="text-xs text-amber-200/70 font-warcraft">
-                        Dungeon <span id="dungeon-progress-num">1</span>
+                        Guess <span id="dungeon-progress-num">1</span> of 10
                     </div>
                 </div>
 
@@ -538,6 +543,43 @@
             </div>
         </div>
 
+        <!-- End of 10-Guess Round Results Modal -->
+        <div id="round-end-modal"
+            class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 hidden backdrop-blur-md">
+            <div class="wow-frame wow-frame-gold max-w-lg w-full rounded-lg p-6 text-center">
+                <div class="wow-corner wow-corner-tl"></div>
+                <div class="wow-corner wow-corner-tr"></div>
+                <div class="wow-corner wow-corner-bl"></div>
+                <div class="wow-corner wow-corner-br"></div>
+
+                <h2 class="text-3xl font-warcraft-title text-amber-400 mb-2 text-glow-gold">
+                    Round Complete!
+                </h2>
+                <p class="text-sm text-gray-300 mb-6">You've completed 10 total guesses.</p>
+
+                <div class="bg-black/60 rounded border border-amber-900/60 p-4 mb-6 space-y-3">
+                    <div class="flex justify-between items-center text-sm font-warcraft">
+                        <span class="text-gray-400">Final Round Score:</span>
+                        <span id="final-round-score" class="text-2xl text-amber-300 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm font-warcraft">
+                        <span class="text-gray-400">Highest Streak:</span>
+                        <span id="final-round-streak" class="text-xl text-orange-400 font-bold">0</span>
+                    </div>
+                    <div
+                        class="flex justify-between items-center text-sm font-warcraft border-t border-amber-900/40 pt-2">
+                        <span class="text-gray-400">All-Time Best:</span>
+                        <span id="final-round-highscore" class="text-xl text-yellow-300 font-bold">0</span>
+                    </div>
+                </div>
+
+                <button id="btn-restart-round"
+                    class="btn-wow font-warcraft px-8 py-3 rounded-md text-base font-bold tracking-wide">
+                    Play Again (10 Guesses)
+                </button>
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->
@@ -552,98 +594,92 @@
         // ==================================================================
 
         const DUNGEON_DATABASE = [
-            {name: "Deadmines", expansion: "Classic", zone: "Westfall", boss: "Edwin VanCleef", lore: "Defias Brotherhood secret pirate ship hideout in Moonbrook", aliases: ["dm", "deadmines", "the deadmines"], image: "https://wow.zamimg.com/uploads/screenshots/normal/78669-the-deadmines.jpg"},
-            {name: "Wailing Caverns", expansion: "Classic", zone: "The Barrens", boss: "Mutanus the Devourer", aliases: ["wc", "wailing caverns"], lore: "Druids of the Fang corrupted inside steam fissures", image: "https://wow.zamimg.com/uploads/screenshots/normal/86186-wailing-caverns.jpg"},
-            {name: "Scarlet Monastery", expansion: "Classic", zone: "Tirispal Glades", boss: "High Inquisitor Whitemane", lore: "Zaletan crusader stronghold zealously fighting undead", aliases: ["sm", "scarlet", "sm lib", "sm cath", "sm armory"], image: "https://wow.zamimg.com/uploads/screenshots/normal/68359-scarlet-monastery-courtyard-scarlet-monastery-armoury.jpg"},
-            {name: "Zul'Farrak", expansion: "Classic", zone: "Tanaris", boss: "Gahz'rilla", lore: "Sandfury troll pyramid city hidden in desert sands", aliases: ["zf", "zulfarrak", "zul farrak"], image: "https://wow.zamimg.com/uploads/screenshots/normal/9195-zulfarrak.jpg"},
-            {name: "Stratholme", expansion: "Classic", zone: "Eastern Plaguelands", boss: "Baron Rivendare", lore: "Plagued city purged by Arthas, filled with Scourge", aliases: ["strat", "stratholme", "strat ud", "strat live"], image: "https://wow.zamimg.com/uploads/screenshots/normal/934237-stratholme.jpg"},
-            {name: "Scholomance", expansion: "Classic", zone: "Western Plaguelands", boss: "Darkmaster Gandling", lore: "Necromantic academy beneath Caer Darrow island", aliases: ["scholo", "scholomance"], image: "https://wow.zamimg.com/uploads/screenshots/normal/67442-scholomance.jpg"},
-            {name: "Blackrock Depths", expansion: "Classic", zone: "Blackrock Mountain", boss: "Emperor Dagran Thaurissan", lore: "Massive subterranean capital of the Dark Iron Dwarves", aliases: ["brd", "blackrock depths"], image: "https://wow.zamimg.com/uploads/screenshots/normal/65414-blackrock-depths.jpg"},
-            {name: "Hellfire Ramparts", expansion: "The Burning Crusade", zone: "Hellfire Peninsula", boss: "Vazruden the Herald", lore: "Fortress guarding the Citadel in Outland red wastes", aliases: ["ramps", "hellfire ramparts", "rampart", "ramparts"], image: "https://wow.zamimg.com/uploads/screenshots/normal/254491-hellfire-ramparts.jpg"},
-            {name: "The Blood Furnace", expansion: "The Burning Crusade", zone: "Hellfire Peninsula", boss: "Keli'dan the Breaker", lore: "Shattered Hand laboratory extracting pit lord demon blood", aliases: ["bf", "blood furnace"], image: "https://wow.zamimg.com/uploads/screenshots/normal/14438-the-blood-furnace.jpg"},
-            {name: "The Slave Pens", expansion: "The Burning Crusade", zone: "Zangarmarsh", boss: "Quagmirran", lore: "Coilfang Naga prison camp draining the Marsh waters", aliases: ["sp", "slave pens"], image: "https://wow.zamimg.com/uploads/screenshots/normal/14915-the-slave-pens-inside-the-slave-pens.jpg"},
-            {name: "Karazhan", expansion: "The Burning Crusade", zone: "Deadwind Pass", boss: "Prince Malchezaar", lore: "Haunted mystical tower of the Guardian Medivh", aliases: ["kara", "karazhan"], image: "https://wow.zamimg.com/uploads/screenshots/normal/22268-karazhan-gamesmans-hall-this-is-where-you-do-the-chess-event-after-beating-the.jpg"},
-            {name: "Magisters' Terrace", expansion: "The Burning Crusade", zone: "Isle of Quel'Danas", boss: "Kael'thas Sunstrider", lore: "Fel-infused sanctum of the fallen Sunstrider king", aliases: ["mgt", "magisters terrace"], image: "https://wow.zamimg.com/uploads/screenshots/normal/72962-magisters-terrace-kaelthas-sunstrider-room.jpg"},
-            {name: "Utgarde Keep", expansion: "Wrath of the Lich King", zone: "Howling Fjord", boss: "Ingvar the Plunderer", lore: "Vrykul stronghold perched over the fjord bluffs", aliases: ["uk", "utgarde keep"], image: "https://wow.zamimg.com/uploads/screenshots/normal/89450-utgarde-keep.jpg"},
-            {name: "The Nexus", expansion: "Wrath of the Lich King", zone: "Borean Tundra", boss: "Grand Magus Telestra", lore: "Arcane dragon lair inside Coldarra ice cavern", aliases: ["nexus", "the nexus"], image: "https://wow.zamimg.com/uploads/screenshots/normal/246557-the-nexus-not-enough-blue.jpg"},
-            {name: "Halls of Lightning", expansion: "Wrath of the Lich King", zone: "The Storm Peaks", boss: "Loken", lore: "Titan facility corrupted by the Old God Yogg-Saron", aliases: ["hol", "halls of lightning"], image: "https://wow.zamimg.com/uploads/screenshots/normal/94685-halls-of-lightning.jpg"},
-            {name: "Pit of Saron", expansion: "Wrath of the Lich King", zone: "Icecrown", boss: "Scourgelord Tyrannus", lore: "Slave quarry and saronite mine below Icecrown Citadel", aliases: ["pos", "pit of saron"], image: "https://wow.zamimg.com/uploads/screenshots/normal/165938-pit-of-saron.jpg"},
-            {name: "Blackrock Caverns", expansion: "Cataclysm", zone: "Blackrock Mountain", boss: "Ascendant Lord Obsidius", lore: "Subterranean stronghold where Twilight's Hammer cultists construct magma elementals", aliases: ["brc", "blackrock caverns"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172742-blackrock-caverns-twilight-camp.jpg"},
-            {name: "The Stonecore", expansion: "Cataclysm", zone: "Deepholm", boss: "High Priestess Azil", lore: "Temple nestled within Earth realm where Twilight's Hammer labored over Deathwing's armor", aliases: ["sc", "stonecore", "the stonecore"], image: "https://wow.zamimg.com/uploads/screenshots/normal/173119-the-stonecore-final-boss-area.jpg"},
-            {name: "Vortex Pinnacle", expansion: "Cataclysm", zone: "Abyssal Breach / Skywall", boss: "Asaad, Caliph of Zephyrs", lore: "Floating elemental sanctuary in sky wall governed by air elementals", aliases: ["vp", "vortex", "vortex pinnacle"], image: "https://wow.zamimg.com/uploads/screenshots/normal/183103-the-vortex-pinnacle.jpg"},
-            {name: "Grim Batol", expansion: "Cataclysm", zone: "Twilight Highlands", boss: "Erudax", lore: "Ancient Wildhammer fortress corrupted into breeding ground for Twilight Dragonflight", aliases: ["gb", "grim batol"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172784-grim-batol-main-corridor.jpg"},
-            {name: "Halls of Origination", expansion: "Cataclysm", zone: "Uldum", boss: "Rajh, Lord of Sun", lore: "Titan facility housing re-origination device capable of purging life on Azeroth", aliases: ["hoo", "halls of origination"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172807-halls-of-origination-big-chamber-with-2-puzzles-and-mirrors-reflecting-lights.jpg"},
-            {name: "Temple of the Jade Serpent", expansion: "Mists of Pandaria", zone: "Jade Forest", boss: "Sha of Doubt", lore: "Sacred pandaren temple overrun by manifestations of Doubt", aliases: ["tjs", "temple of the jade serpent"], image: "https://wow.zamimg.com/uploads/screenshots/normal/333587-temple-of-the-jade-serpent-wise-maris-room.jpg"},
-            {name: "Stormstout Brewery", expansion: "Mists of Pandaria", zone: "Valley of Four Winds", boss: "Yan-Zhu the Uncorked", lore: "Historic brewery overrun by virmen, hozen, and wild ale elementals", aliases: ["sb", "brewery", "stormstout brewery"], image: "https://wow.zamimg.com/uploads/screenshots/normal/351919-stormstout-brewery-hozen-party-room.jpg"},
-            {name: "Bloodmaul Slag Mines", expansion: "Warlords of Draenor", zone: "Frostfire Ridge", boss: "Gug'rokk", lore: "Subjugated mine operation where Bloodmaul ogres force slaves to harvest minerals", aliases: ["bsm", "bloodmaul"], image: "https://wow.zamimg.com/uploads/screenshots/normal/420288-bloodmaul-slag-mines.jpg"},
-            {name: "Halls of Valor", expansion: "Legion", zone: "Stormheim", boss: "Odyn", lore: "Golden celestial realm where Valarjar warriors prove worth", aliases: ["hov", "halls of valor"], image: "https://wow.zamimg.com/uploads/screenshots/normal/562178-halls-of-valor-the-long-journey-to-odyn.jpg"},
-            {name: "Court of Stars", expansion: "Legion", zone: "Suramar", boss: "Advisor Melandrus", lore: "Nightborne masquerade party under Nightwell moonlight", aliases: ["cos", "court of stars"], image: "https://wow.zamimg.com/uploads/screenshots/normal/572186-court-of-stars.jpg"},
-            {name: "Freehold", expansion: "Battle for Azeroth", zone: "Tiragarde Sound", boss: "Harlan Sweete", lore: "Haven for pirates, cutthroats, and rogue sailors", aliases: ["fh", "freehold"], image: "https://wow.zamimg.com/uploads/screenshots/normal/770899-freehold.jpg"},
-            {name: "Atal'Dazar", expansion: "Battle for Azeroth", zone: "Zuldazar", boss: "Yazma", lore: "Ancient resting place of Zandalari kings", aliases: ["ad", "atal", "ataldazar"], image: "https://wow.zamimg.com/uploads/screenshots/normal/770072-ataldazar.jpg"},
-            {name: "The Necrotic Wake", expansion: "Shadowlands", zone: "Bastion", boss: "Nalthor the Rimebinder", lore: "Bastion stronghold invaded by undead forces of Maldraxxus", aliases: ["nw", "necrotic wake"], image: "https://wow.zamimg.com/uploads/screenshots/normal/922202-the-necrotic-wake.jpg"},
-            {name: "Ruby Life Pools", expansion: "Dragonflight", zone: "The Waking Shores", boss: "Kyrakka and Erhart", lore: "Sacred nesting grounds of the Red Dragonflight", aliases: ["rlp", "ruby life pools"], image: "https://wow.zamimg.com/uploads/screenshots/normal/1087564-ruby-life-pools.jpg"},
-            {name: "The Stonevault", expansion: "The War Within", zone: "The Ringing Deeps", boss: "Void Speaker Eirich", lore: "Massive titan facility housing ancient machinery", aliases: ["sv", "stonevault"], image: "https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/c0/C0HA6WG54NIV1723550315743.png"}
+            { name: "Deadmines", expansion: "Classic", zone: "Westfall", boss: "Edwin VanCleef", lore: "Defias Brotherhood secret pirate ship hideout in Moonbrook", aliases: ["dm", "deadmines", "the deadmines"], image: "https://wow.zamimg.com/uploads/screenshots/normal/78669-the-deadmines.jpg" },
+            { name: "Wailing Caverns", expansion: "Classic", zone: "The Barrens", boss: "Mutanus the Devourer", aliases: ["wc", "wailing caverns"], lore: "Druids of the Fang corrupted inside steam fissures", image: "https://wow.zamimg.com/uploads/screenshots/normal/86186-wailing-caverns.jpg" },
+            { name: "Scarlet Monastery", expansion: "Classic", zone: "Tirispal Glades", boss: "High Inquisitor Whitemane", lore: "Zaletan crusader stronghold zealously fighting undead", aliases: ["sm", "scarlet", "sm lib", "sm cath", "sm armory"], image: "https://wow.zamimg.com/uploads/screenshots/normal/68359-scarlet-monastery-courtyard-scarlet-monastery-armoury.jpg" },
+            { name: "Zul'Farrak", expansion: "Classic", zone: "Tanaris", boss: "Gahz'rilla", lore: "Sandfury troll pyramid city hidden in desert sands", aliases: ["zf", "zulfarrak", "zul farrak"], image: "https://wow.zamimg.com/uploads/screenshots/normal/9195-zulfarrak.jpg" },
+            { name: "Stratholme", expansion: "Classic", zone: "Eastern Plaguelands", boss: "Baron Rivendare", lore: "Plagued city purged by Arthas, filled with Scourge", aliases: ["strat", "stratholme", "strat ud", "strat live"], image: "https://wow.zamimg.com/uploads/screenshots/normal/934237-stratholme.jpg" },
+            { name: "Scholomance", expansion: "Classic", zone: "Western Plaguelands", boss: "Darkmaster Gandling", lore: "Necromantic academy beneath Caer Darrow island", aliases: ["scholo", "scholomance"], image: "https://wow.zamimg.com/uploads/screenshots/normal/67442-scholomance.jpg" },
+            { name: "Blackrock Depths", expansion: "Classic", zone: "Blackrock Mountain", boss: "Emperor Dagran Thaurissan", lore: "Massive subterranean capital of the Dark Iron Dwarves", aliases: ["brd", "blackrock depths"], image: "https://wow.zamimg.com/uploads/screenshots/normal/65414-blackrock-depths.jpg" },
+            { name: "Hellfire Ramparts", expansion: "The Burning Crusade", zone: "Hellfire Peninsula", boss: "Vazruden the Herald", lore: "Fortress guarding the Citadel in Outland red wastes", aliases: ["ramps", "hellfire ramparts", "rampart", "ramparts"], image: "https://wow.zamimg.com/uploads/screenshots/normal/254491-hellfire-ramparts.jpg" },
+            { name: "The Blood Furnace", expansion: "The Burning Crusade", zone: "Hellfire Peninsula", boss: "Keli'dan the Breaker", lore: "Shattered Hand laboratory extracting pit lord demon blood", aliases: ["bf", "blood furnace"], image: "https://wow.zamimg.com/uploads/screenshots/normal/14438-the-blood-furnace.jpg" },
+            { name: "The Slave Pens", expansion: "The Burning Crusade", zone: "Zangarmarsh", boss: "Quagmirran", lore: "Coilfang Naga prison camp draining the Marsh waters", aliases: ["sp", "slave pens"], image: "https://wow.zamimg.com/uploads/screenshots/normal/14915-the-slave-pens-inside-the-slave-pens.jpg" },
+            { name: "Karazhan", expansion: "The Burning Crusade", zone: "Deadwind Pass", boss: "Prince Malchezaar", lore: "Haunted mystical tower of the Guardian Medivh", aliases: ["kara", "karazhan"], image: "https://wow.zamimg.com/uploads/screenshots/normal/22268-karazhan-gamesmans-hall-this-is-where-you-do-the-chess-event-after-beating-the.jpg" },
+            { name: "Magisters' Terrace", expansion: "The Burning Crusade", zone: "Isle of Quel'Danas", boss: "Kael'thas Sunstrider", lore: "Fel-infused sanctum of the fallen Sunstrider king", aliases: ["mgt", "magisters terrace"], image: "https://wow.zamimg.com/uploads/screenshots/normal/72962-magisters-terrace-kaelthas-sunstrider-room.jpg" },
+            { name: "Utgarde Keep", expansion: "Wrath of the Lich King", zone: "Howling Fjord", boss: "Ingvar the Plunderer", lore: "Vrykul stronghold perched over the fjord bluffs", aliases: ["uk", "utgarde keep"], image: "https://wow.zamimg.com/uploads/screenshots/normal/89450-utgarde-keep.jpg" },
+            { name: "The Nexus", expansion: "Wrath of the Lich King", zone: "Borean Tundra", boss: "Grand Magus Telestra", lore: "Arcane dragon lair inside Coldarra ice cavern", aliases: ["nexus", "the nexus"], image: "https://wow.zamimg.com/uploads/screenshots/normal/246557-the-nexus-not-enough-blue.jpg" },
+            { name: "Halls of Lightning", expansion: "Wrath of the Lich King", zone: "The Storm Peaks", boss: "Loken", lore: "Titan facility corrupted by the Old God Yogg-Saron", aliases: ["hol", "halls of lightning"], image: "https://wow.zamimg.com/uploads/screenshots/normal/94685-halls-of-lightning.jpg" },
+            { name: "Pit of Saron", expansion: "Wrath of the Lich King", zone: "Icecrown", boss: "Scourgelord Tyrannus", lore: "Slave quarry and saronite mine below Icecrown Citadel", aliases: ["pos", "pit of saron"], image: "https://wow.zamimg.com/uploads/screenshots/normal/165938-pit-of-saron.jpg" },
+            { name: "Blackrock Caverns", expansion: "Cataclysm", zone: "Blackrock Mountain", boss: "Ascendant Lord Obsidius", lore: "Subterranean stronghold where Twilight's Hammer cultists construct magma elementals", aliases: ["brc", "blackrock caverns"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172742-blackrock-caverns-twilight-camp.jpg" },
+            { name: "The Stonecore", expansion: "Cataclysm", zone: "Deepholm", boss: "High Priestess Azil", lore: "Temple nestled within Earth realm where Twilight's Hammer labored over Deathwing's armor", aliases: ["sc", "stonecore", "the stonecore"], image: "https://wow.zamimg.com/uploads/screenshots/normal/173119-the-stonecore-final-boss-area.jpg" },
+            { name: "Vortex Pinnacle", expansion: "Cataclysm", zone: "Abyssal Breach / Skywall", boss: "Asaad, Caliph of Zephyrs", lore: "Floating elemental sanctuary in sky wall governed by air elementals", aliases: ["vp", "vortex", "vortex pinnacle"], image: "https://wow.zamimg.com/uploads/screenshots/normal/183103-the-vortex-pinnacle.jpg" },
+            { name: "Grim Batol", expansion: "Cataclysm", zone: "Twilight Highlands", boss: "Erudax", lore: "Ancient Wildhammer fortress corrupted into breeding ground for Twilight Dragonflight", aliases: ["gb", "grim batol"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172784-grim-batol-main-corridor.jpg" },
+            { name: "Halls of Origination", expansion: "Cataclysm", zone: "Uldum", boss: "Rajh, Lord of Sun", lore: "Titan facility housing re-origination device capable of purging life on Azeroth", aliases: ["hoo", "halls of origination"], image: "https://wow.zamimg.com/uploads/screenshots/normal/172807-halls-of-origination-big-chamber-with-2-puzzles-and-mirrors-reflecting-lights.jpg" },
+            { name: "Temple of the Jade Serpent", expansion: "Mists of Pandaria", zone: "Jade Forest", boss: "Sha of Doubt", lore: "Sacred pandaren temple overrun by manifestations of Doubt", aliases: ["tjs", "temple of the jade serpent"], image: "https://wow.zamimg.com/uploads/screenshots/normal/333587-temple-of-the-jade-serpent-wise-maris-room.jpg" },
+            { name: "Stormstout Brewery", expansion: "Mists of Pandaria", zone: "Valley of Four Winds", boss: "Yan-Zhu the Uncorked", lore: "Historic brewery overrun by virmen, hozen, and wild ale elementals", aliases: ["sb", "brewery", "stormstout brewery"], image: "https://wow.zamimg.com/uploads/screenshots/normal/351919-stormstout-brewery-hozen-party-room.jpg" },
+            { name: "Bloodmaul Slag Mines", expansion: "Warlords of Draenor", zone: "Frostfire Ridge", boss: "Gug'rokk", lore: "Subjugated mine operation where Bloodmaul ogres force slaves to harvest minerals", aliases: ["bsm", "bloodmaul"], image: "https://wow.zamimg.com/uploads/screenshots/normal/420288-bloodmaul-slag-mines.jpg" },
+            { name: "Halls of Valor", expansion: "Legion", zone: "Stormheim", boss: "Odyn", lore: "Golden celestial realm where Valarjar warriors prove worth", aliases: ["hov", "halls of valor"], image: "https://wow.zamimg.com/uploads/screenshots/normal/562178-halls-of-valor-the-long-journey-to-odyn.jpg" },
+            { name: "Court of Stars", expansion: "Legion", zone: "Suramar", boss: "Advisor Melandrus", lore: "Nightborne masquerade party under Nightwell moonlight", aliases: ["cos", "court of stars"], image: "https://wow.zamimg.com/uploads/screenshots/normal/572186-court-of-stars.jpg" },
+            { name: "Freehold", expansion: "Battle for Azeroth", zone: "Tiragarde Sound", boss: "Harlan Sweete", lore: "Haven for pirates, cutthroats, and rogue sailors", aliases: ["fh", "freehold"], image: "https://wow.zamimg.com/uploads/screenshots/normal/770899-freehold.jpg" },
+            { name: "Atal'Dazar", expansion: "Battle for Azeroth", zone: "Zuldazar", boss: "Yazma", lore: "Ancient resting place of Zandalari kings", aliases: ["ad", "atal", "ataldazar"], image: "https://wow.zamimg.com/uploads/screenshots/normal/770072-ataldazar.jpg" },
+            { name: "The Necrotic Wake", expansion: "Shadowlands", zone: "Bastion", boss: "Nalthor the Rimebinder", lore: "Bastion stronghold invaded by undead forces of Maldraxxus", aliases: ["nw", "necrotic wake"], image: "https://wow.zamimg.com/uploads/screenshots/normal/922202-the-necrotic-wake.jpg" },
+            { name: "Ruby Life Pools", expansion: "Dragonflight", zone: "The Waking Shores", boss: "Kyrakka and Erhart", lore: "Sacred nesting grounds of the Red Dragonflight", aliases: ["rlp", "ruby life pools"], image: "https://wow.zamimg.com/uploads/screenshots/normal/1087564-ruby-life-pools.jpg" },
+            { name: "The Stonevault", expansion: "The War Within", zone: "The Ringing Deeps", boss: "Void Speaker Eirich", lore: "Massive titan facility housing ancient machinery", aliases: ["sv", "stonevault"], image: "https://bnetcmsus-a.akamaihd.net/cms/content_entry_media/c0/C0HA6WG54NIV1723550315743.png" }
         ];
 
         const CHARACTER_DATABASE = [
-            {name: "Arthas Menethil", title: "The Lich King", faction: "Scourge", aliases: ["arthas", "lich king", "lk", "arthas menethil"], image: "https://static.wikia.nocookie.net/wowpedia/images/a/a2/Lich_King_by_Raneman.jpg/revision/latest/scale-to-width-down/1000?cb=20210415161401", focalX: 50, focalY: 35},
-            {name: "Illidan Stormrage", title: "The Betrayer", faction: "Illidari", aliases: ["illidan", "illidan stormrage", "the betrayer"], image: "https://static.wikia.nocookie.net/wowpedia/images/e/e0/Illidan_the_Betrayer.jpg/revision/latest?cb=20150907112817", focalX: 50, focalY: 40},
-            {name: "Sylvanas Windrunner", title: "The Banshee Queen", faction: "Horde / Forsaken", aliases: ["sylvanas", "sylv", "sylvanas windrunner", "banshee queen"], image: "https://static.wikia.nocookie.net/wowpedia/images/6/65/Sylvanas_by_Erik_Braddock.jpg/revision/latest/scale-to-width-down/1000?cb=20210313000233", focalX: 50, focalY: 30},
-            {name: "Thrall", title: "Son of Durotan", faction: "Horde", aliases: ["thrall", "go'el", "goel"], image: "https://static.wikia.nocookie.net/wowpedia/images/4/4a/Thrall_Wei.jpg/revision/latest?cb=20100304051638", focalX: 50, focalY: 35},
-            {name: "Jaina Proudmoore", title: "Lord Admiral of Kul Tiras", faction: "Alliance", aliases: ["jaina", "jaina proudmoore"], image: "https://warcraft.wiki.gg/images/thumb/Jaina_FX.jpg/800px-Jaina_FX.jpg?79285d", focalX: 50, focalY: 30},
-            {name: "Ragnaros", title: "The Firelord", faction: "Elemental Lords", aliases: ["ragnaros", "rag", "firelord"], image: "https://warcraft.wiki.gg/images/RagnarosFirelands.jpg", focalX: 50, focalY: 35},
-            {name: "Deathwing", title: "The Worldbreaker", faction: "Black Dragonflight", aliases: ["deathwing", "neltharion"], image: "https://warcraft.wiki.gg/images/thumb/Cataclysm_Classic_key_art.jpg/1920px-Cataclysm_Classic_key_art.jpg?8dc279", focalX: 50, focalY: 40},
-            {name: "Tyrande Whisperwind", title: "High Priestess of Elune", faction: "Alliance", aliases: ["tyrande", "tyrande whisperwind"], image: "https://warcraft.wiki.gg/images/thumb/Tyrande_Mercenaries_3.jpg/800px-Tyrande_Mercenaries_3.jpg?bc0904", focalX: 50, focalY: 35},
-            {name: "Vol'jin", title: "Warchief of the Horde", faction: "Horde", aliases: ["voljin", "vol'jin"], image: "https://warcraft.wiki.gg/images/Vol%27jin_Wei.jpg", focalX: 50, focalY: 35},
-            {name: "Varian Wrynn", title: "High King of the Alliance", faction: "Alliance", aliases: ["varian", "varian wrynn", "chin"], image: "https://warcraft.wiki.gg/images/Varian_Wei.jpg", focalX: 50, focalY: 30},
-            {name: "Khadgar", title: "Archmage of the Kirin Tor", faction: "Neutral / Alliance", aliases: ["khadgar", "dadgar"], image: "https://warcraft.wiki.gg/images/Khadgar_HS_cropped.jpg", focalX: 50, focalY: 30},
-            {name: "Gul'dan", title: "Destroyer of Dreams", faction: "Shadow Council", aliases: ["guldan", "gul'dan"], image: "https://warcraft.wiki.gg/images/thumb/Gul%27dan_Mercenaries_3.jpg/800px-Gul%27dan_Mercenaries_3.jpg?1daa05", focalX: 50, focalY: 35},
-            {name: "Malfurion Stormrage", title: "Archdruid of Azeroth", faction: "Alliance", aliases: ["malfurion", "malfurion stormrage"], image: "https://warcraft.wiki.gg/images/Malfurion_WotE_Cropped.jpg", focalX: 50, focalY: 30},
-            {name: "Anduin Wrynn", title: "King of Stormwind", faction: "Alliance", aliases: ["anduin", "anduin wrynn"], image: "https://warcraft.wiki.gg/images/thumb/Anduin_by_Erik_Braddock_-_cropped.jpg/800px-Anduin_by_Erik_Braddock_-_cropped.jpg?29b87a", focalX: 50, focalY: 30},
-            {name: "Grommash Hellscream", title: "Chieftain of Warsong Clan", faction: "Horde", aliases: ["grom", "grommash", "grom hellscream", "grommash hellscream"], image: "https://warcraft.wiki.gg/images/thumb/Rise_of_the_Horde.jpg/800px-Rise_of_the_Horde.jpg?6c8dea", focalX: 50, focalY: 30},
-            {name: "Garrosh Hellscream", title: "True Warchief of the Horde", faction: "Horde", aliases: ["garrosh", "garrosh hellscream"], image: "https://warcraft.wiki.gg/images/thumb/OrgrimmarSiege2.jpg/1920px-OrgrimmarSiege2.jpg?de163b", focalX: 50, focalY: 35},
-            {name: "Alexstrasza", title: "The Life-Binder", faction: "Red Dragonflight", aliases: ["alexstrasza", "alexstraza", "lifebinder", "life-binder"], image: "https://warcraft.wiki.gg/images/thumb/Dragonflight_Alexstrasza_Bayard_Wu.jpg/1920px-Dragonflight_Alexstrasza_Bayard_Wu.jpg?85fa66", focalX: 50, focalY: 35},
-            {name: "Ysera", title: "The Awakened / Dreamer", faction: "Green Dragonflight", aliases: ["ysera"], image: "https://warcraft.wiki.gg/images/thumb/Dragonflight_Leader_Ysera.png/1920px-Dragonflight_Leader_Ysera.png?de1df6", focalX: 50, focalY: 35},
-            {name: "Nozdormu", title: "The Timeless One", faction: "Bronze Dragonflight", aliases: ["nozdormu"], image: "https://warcraft.wiki.gg/images/thumb/Nozdormu%2C_Bronze_Aspect_%28Signature%29_HS.jpg/800px-Nozdormu%2C_Bronze_Aspect_%28Signature%29_HS.jpg?e75db7", focalX: 50, focalY: 35},
-            {name: "Malygos", title: "The Spell-Weaver", faction: "Blue Dragonflight", aliases: ["malygos"], image: "https://warcraft.wiki.gg/images/thumb/Malygos_the_Spellweaver_Core_Set.png/800px-Malygos_the_Spellweaver_Core_Set.png?e91afa", focalX: 50, focalY: 35},
-            {name: "Kel'Thuzad", title: "Archlich of Naxxramas", faction: "Scourge", aliases: ["kelthuzad", "kel'thuzad", "kt"], image: "https://warcraft.wiki.gg/images/thumb/Ashbringer4CoverSampleA.jpg/800px-Ashbringer4CoverSampleA.jpg?79027f", focalX: 50, focalY: 30},
-            {name: "Kael'thas Sunstrider", title: "Lord of the Blood Elves", faction: "Blood Elves", aliases: ["kaelthas", "kael'thas", "kael"], image: "https://warcraft.wiki.gg/images/Bloodmagesamwise.jpg", focalX: 50, focalY: 35},
-            {name: "Lady Vashj", title: "Matron of Coilfang", faction: "Naga", aliases: ["vashj", "lady vashj"], image: "https://warcraft.wiki.gg/images/thumb/Burning_Crusade_Classic_-_Lady_Vashj.jpg/1024px-Burning_Crusade_Classic_-_Lady_Vashj.jpg?b1f21c", focalX: 50, focalY: 35},
-            {name: "C'Thun", title: "The Old God of Ahn'Qiraj", faction: "Old Gods", aliases: ["cthun", "c'thun"], image: "https://warcraft.wiki.gg/images/thumb/C%27Thun_HS.jpg/800px-C%27Thun_HS.jpg?2a0df3", focalX: 50, focalY: 50},
-            {name: "Yogg-Saron", title: "Fiend of a Thousand Faces", faction: "Old Gods", aliases: ["yogg", "yogg saron", "yogg-saron"], image: "https://warcraft.wiki.gg/images/Yogg-Saron_Blizzard_com.jpg", focalX: 50, focalY: 50},
-            {name: "N'Zoth", title: "The Corruptor", faction: "Old Gods", aliases: ["nzoth", "n'zoth"], image: "https://warcraft.wiki.gg/images/thumb/N%27Zoth_HS_Mercenaries.jpg/800px-N%27Zoth_HS_Mercenaries.jpg?8fbbd4", focalX: 50, focalY: 45},
-            {name: "Sargeras", title: "The Dark Titan", faction: "Burning Legion", aliases: ["sargeras"], image: "https://warcraft.wiki.gg/images/thumb/Sargeras_Gamescom_2017.png/1024px-Sargeras_Gamescom_2017.png?95d38f", focalX: 50, focalY: 35},
-            {name: "Kil'jaeden", title: "The Deceiver", faction: "Burning Legion", aliases: ["kiljaeden", "kil'jaeden", "kj"], image: "https://warcraft.wiki.gg/images/thumb/Kil%27jaeden_HS.jpg/800px-Kil%27jaeden_HS.jpg?7da8b5", focalX: 50, focalY: 35},
-            {name: "Archimonde", title: "The Defiler", faction: "Burning Legion", aliases: ["archimonde", "archi"], image: "https://warcraft.wiki.gg/images/Archimonde-WoD.jpg", focalX: 50, focalY: 35},
-            {name: "Medivh", title: "The Last Guardian", faction: "Neutral", aliases: ["medivh", "guardian"], image: "https://warcraft.wiki.gg/images/Medivh_HotS_Art_2.jpg", focalX: 50, focalY: 30},
-            {name: "Lor'themar Theron", title: "Regent Lord of Quel'Thalas", faction: "Horde / Blood Elves", aliases: ["lorthemar", "lor'themar", "theron"], image: "https://warcraft.wiki.gg/images/thumb/Lor%27themar_by_Bayard_Wu_Cropped.png/1024px-Lor%27themar_by_Bayard_Wu_Cropped.png?7cf0d5", focalX: 50, focalY: 30},
-            {name: "Baine Bloodhoof", title: "High Chieftain of Tauren", faction: "Horde", aliases: ["baine", "baine bloodhoof"], image: "https://warcraft.wiki.gg/images/thumb/Glowei_Baine_Bloodhoof.jpg/800px-Glowei_Baine_Bloodhoof.jpg?8f94e5", focalX: 50, focalY: 35},
-            {name: "Cairne Bloodhoof", title: "Former High Chieftain", faction: "Horde", aliases: ["cairne", "cairne bloodhoof"], image: "https://warcraft.wiki.gg/images/thumb/Cairne_Mercenaries_3.jpg/800px-Cairne_Mercenaries_3.jpg?c941e7", focalX: 50, focalY: 35},
-            {name: "Genn Greymane", title: "King of Gilneas", faction: "Alliance", aliases: ["genn", "greymane", "genn greymane"], image: "https://warcraft.wiki.gg/images/Genn_Broken_Shore.PNG", focalX: 50, focalY: 30},
-            {name: "Mekkatorque", title: "High Tinker of Gnomes", faction: "Alliance", aliases: ["mekkatorque", "gelbin mekkatorque", "gelbin"], image: "https://warcraft.wiki.gg/images/Mekkatorque_old_model.jpg", focalX: 50, focalY: 35},
-            {name: "Muradin Bronzebeard", title: "Mountain King", faction: "Alliance", aliases: ["muradin", "muradin bronzebeard"], image: "https://warcraft.wiki.gg/images/thumb/Muradin_Glenn_Rane.jpg/800px-Muradin_Glenn_Rane.jpg?44425c", focalX: 50, focalY: 35},
-            {name: "Magni Bronzebeard", title: "The Speaker", faction: "Neutral / Alliance", aliases: ["magni", "magni bronzebeard"], image: "https://warcraft.wiki.gg/images/thumb/King_Magni_Bronzebeard.jpg/800px-King_Magni_Bronzebeard.jpg?b963f4", focalX: 50, focalY: 35},
-            {name: "Uther the Lightbringer", title: "First Paladin of the Silver Hand", faction: "Alliance", aliases: ["uther", "uther the lightbringer"], image: "https://warcraft.wiki.gg/images/thumb/UthersTombBfA.jpg/1920px-UthersTombBfA.jpg?462e7b", focalX: 50, focalY: 30},
-            {name: "Tirion Fordring", title: "Highlord of the Argent Crusade", faction: "Neutral / Alliance", aliases: ["tirion", "tirion fordring"], image: "https://warcraft.wiki.gg/images/Tirion_Raneman_Cropped.jpg", focalX: 50, focalY: 30},
-            {name: "Bolvar Fordragon", title: "The Fire Lich King / Highlord", faction: "Scourge / Alliance", aliases: ["bolvar", "bolvar fordragon"], image: "https://warcraft.wiki.gg/images/Shadowlands_Cinematic_artstation_3.jpg", focalX: 50, focalY: 35},
-            {name: "Alleria Windrunner", title: "Void Elf Leader", faction: "Alliance", aliases: ["alleria", "alleria windrunner"], image: "https://warcraft.wiki.gg/images/thumb/AlleriaWindrunner-TWW.png/800px-AlleriaWindrunner-TWW.png?4a5b76", focalX: 50, focalY: 30},
-            {name: "Turalyon", title: "High Commander of Army of Light", faction: "Alliance", aliases: ["turalyon", "high commander turalyon"], image: "https://warcraft.wiki.gg/images/Turalyon-profile.png", focalX: 50, focalY: 30},
-            {name: "Prophet Velen", title: "Leader of the Draenei", faction: "Alliance", aliases: ["velen", "prophet velen"], image: "https://warcraft.wiki.gg/images/Prophet_Velen_TCG.jpg", focalX: 50, focalY: 30},
-            {name: "Chen Stormstout", title: "Legendary Brewmaster", faction: "Neutral", aliases: ["chen", "chen stormstout"], image: "https://warcraft.wiki.gg/images/Chen_Stormstout_Cinematic_2.jpg", focalX: 50, focalY: 35},
-            {name: "Wrathion", title: "The Black Prince", faction: "Black Dragonflight", aliases: ["wrathion"], image: "https://warcraft.wiki.gg/images/thumb/Wrathion_in_Visions_of_N%27Zoth_cinematic.png/800px-Wrathion_in_Visions_of_N%27Zoth_cinematic.png?de94df", focalX: 50, focalY: 35},
-            {name: "Bwonsamdi", title: "Loa of Grave and Death", faction: "Zandalar Loa", aliases: ["bwonsamdi", "loa of death"], image: "https://warcraft.wiki.gg/images/thumb/Bwonsamdi_in_Zuldazar.png/800px-Bwonsamdi_in_Zuldazar.png?21b0e5", focalX: 50, focalY: 30},
-            {name: "Algalon the Observer", title: "Herald of the Titans", faction: "Titans", aliases: ["algalon", "algalon the observer"], image: "https://warcraft.wiki.gg/images/Algalon_the_Observer.jpg", focalX: 50, focalY: 35}
+            { name: "Arthas Menethil", title: "The Lich King", faction: "Scourge", aliases: ["arthas", "lich king", "lk", "arthas menethil"], image: "https://static.wikia.nocookie.net/wowpedia/images/a/a2/Lich_King_by_Raneman.jpg/revision/latest/scale-to-width-down/1000?cb=20210415161401", focalX: 50, focalY: 35 },
+            { name: "Illidan Stormrage", title: "The Betrayer", faction: "Illidari", aliases: ["illidan", "illidan stormrage", "the betrayer"], image: "https://static.wikia.nocookie.net/wowpedia/images/e/e0/Illidan_the_Betrayer.jpg/revision/latest?cb=20150907112817", focalX: 50, focalY: 40 },
+            { name: "Sylvanas Windrunner", title: "The Banshee Queen", faction: "Horde / Forsaken", aliases: ["sylvanas", "sylv", "sylvanas windrunner", "banshee queen"], image: "https://static.wikia.nocookie.net/wowpedia/images/6/65/Sylvanas_by_Erik_Braddock.jpg/revision/latest/scale-to-width-down/1000?cb=20210313000233", focalX: 50, focalY: 30 },
+            { name: "Thrall", title: "Son of Durotan", faction: "Horde", aliases: ["thrall", "go'el", "goel"], image: "https://static.wikia.nocookie.net/wowpedia/images/4/4a/Thrall_Wei.jpg/revision/latest?cb=20100304051638", focalX: 50, focalY: 35 },
+            { name: "Jaina Proudmoore", title: "Lord Admiral of Kul Tiras", faction: "Alliance", aliases: ["jaina", "jaina proudmoore"], image: "https://warcraft.wiki.gg/images/thumb/Jaina_FX.jpg/800px-Jaina_FX.jpg?79285d", focalX: 50, focalY: 30 },
+            { name: "Ragnaros", title: "The Firelord", faction: "Elemental Lords", aliases: ["ragnaros", "rag", "firelord"], image: "https://warcraft.wiki.gg/images/RagnarosFirelands.jpg", focalX: 50, focalY: 35 },
+            { name: "Deathwing", title: "The Worldbreaker", faction: "Black Dragonflight", aliases: ["deathwing", "neltharion"], image: "https://warcraft.wiki.gg/images/thumb/Cataclysm_Classic_key_art.jpg/1920px-Cataclysm_Classic_key_art.jpg?8dc279", focalX: 50, focalY: 40 },
+            { name: "Tyrande Whisperwind", title: "High Priestess of Elune", faction: "Alliance", aliases: ["tyrande", "tyrande whisperwind"], image: "https://warcraft.wiki.gg/images/thumb/Tyrande_Mercenaries_3.jpg/800px-Tyrande_Mercenaries_3.jpg?bc0904", focalX: 50, focalY: 35 },
+            { name: "Vol'jin", title: "Warchief of the Horde", faction: "Horde", aliases: ["voljin", "vol'jin"], image: "https://warcraft.wiki.gg/images/Vol%27jin_Wei.jpg", focalX: 50, focalY: 35 },
+            { name: "Varian Wrynn", title: "High King of the Alliance", faction: "Alliance", aliases: ["varian", "varian wrynn", "chin"], image: "https://warcraft.wiki.gg/images/Varian_Wei.jpg", focalX: 50, focalY: 30 },
+            { name: "Khadgar", title: "Archmage of the Kirin Tor", faction: "Neutral / Alliance", aliases: ["khadgar", "dadgar"], image: "https://warcraft.wiki.gg/images/Khadgar_HS_cropped.jpg", focalX: 50, focalY: 30 },
+            { name: "Gul'dan", title: "Destroyer of Dreams", faction: "Shadow Council", aliases: ["guldan", "gul'dan"], image: "https://warcraft.wiki.gg/images/thumb/Gul%27dan_Mercenaries_3.jpg/800px-Gul%27dan_Mercenaries_3.jpg?1daa05", focalX: 50, focalY: 35 },
+            { name: "Malfurion Stormrage", title: "Archdruid of Azeroth", faction: "Alliance", aliases: ["malfurion", "malfurion stormrage"], image: "https://warcraft.wiki.gg/images/Malfurion_WotE_Cropped.jpg", focalX: 50, focalY: 30 },
+            { name: "Anduin Wrynn", title: "King of Stormwind", faction: "Alliance", aliases: ["anduin", "anduin wrynn"], image: "https://warcraft.wiki.gg/images/thumb/Anduin_by_Erik_Braddock_-_cropped.jpg/800px-Anduin_by_Erik_Braddock_-_cropped.jpg?29b87a", focalX: 50, focalY: 30 },
+            { name: "Grommash Hellscream", title: "Chieftain of Warsong Clan", faction: "Horde", aliases: ["grom", "grommash", "grom hellscream", "grommash hellscream"], image: "https://warcraft.wiki.gg/images/thumb/Rise_of_the_Horde.jpg/800px-Rise_of_the_Horde.jpg?6c8dea", focalX: 50, focalY: 30 },
+            { name: "Garrosh Hellscream", title: "True Warchief of the Horde", faction: "Horde", aliases: ["garrosh", "garrosh hellscream"], image: "https://warcraft.wiki.gg/images/thumb/OrgrimmarSiege2.jpg/1920px-OrgrimmarSiege2.jpg?de163b", focalX: 50, focalY: 35 },
+            { name: "Alexstrasza", title: "The Life-Binder", faction: "Red Dragonflight", aliases: ["alexstrasza", "alexstraza", "lifebinder", "life-binder"], image: "https://warcraft.wiki.gg/images/thumb/Dragonflight_Alexstrasza_Bayard_Wu.jpg/1920px-Dragonflight_Alexstrasza_Bayard_Wu.jpg?85fa66", focalX: 50, focalY: 35 },
+            { name: "Ysera", title: "The Awakened / Dreamer", faction: "Green Dragonflight", aliases: ["ysera"], image: "https://warcraft.wiki.gg/images/thumb/Dragonflight_Leader_Ysera.png/1920px-Dragonflight_Leader_Ysera.png?de1df6", focalX: 50, focalY: 35 },
+            { name: "Nozdormu", title: "The Timeless One", faction: "Bronze Dragonflight", aliases: ["nozdormu"], image: "https://warcraft.wiki.gg/images/thumb/Nozdormu%2C_Bronze_Aspect_%28Signature%29_HS.jpg/800px-Nozdormu%2C_Bronze_Aspect_%28Signature%29_HS.jpg?e75db7", focalX: 50, focalY: 35 },
+            { name: "Malygos", title: "The Spell-Weaver", faction: "Blue Dragonflight", aliases: ["malygos"], image: "https://warcraft.wiki.gg/images/thumb/Malygos_the_Spellweaver_Core_Set.png/800px-Malygos_the_Spellweaver_Core_Set.png?e91afa", focalX: 50, focalY: 35 },
+            { name: "Kel'Thuzad", title: "Archlich of Naxxramas", faction: "Scourge", aliases: ["kelthuzad", "kel'thuzad", "kt"], image: "https://warcraft.wiki.gg/images/thumb/Ashbringer4CoverSampleA.jpg/800px-Ashbringer4CoverSampleA.jpg?79027f", focalX: 50, focalY: 30 },
+            { name: "Kael'thas Sunstrider", title: "Lord of the Blood Elves", faction: "Blood Elves", aliases: ["kaelthas", "kael'thas", "kael"], image: "https://warcraft.wiki.gg/images/Bloodmagesamwise.jpg", focalX: 50, focalY: 35 },
+            { name: "Lady Vashj", title: "Matron of Coilfang", faction: "Naga", aliases: ["vashj", "lady vashj"], image: "https://warcraft.wiki.gg/images/thumb/Burning_Crusade_Classic_-_Lady_Vashj.jpg/1024px-Burning_Crusade_Classic_-_Lady_Vashj.jpg?b1f21c", focalX: 50, focalY: 35 },
+            { name: "C'Thun", title: "The Old God of Ahn'Qiraj", faction: "Old Gods", aliases: ["cthun", "c'thun"], image: "https://warcraft.wiki.gg/images/thumb/C%27Thun_HS.jpg/800px-C%27Thun_HS.jpg?2a0df3", focalX: 50, focalY: 50 },
+            { name: "Yogg-Saron", title: "Fiend of a Thousand Faces", faction: "Old Gods", aliases: ["yogg", "yogg saron", "yogg-saron"], image: "https://warcraft.wiki.gg/images/Yogg-Saron_Blizzard_com.jpg", focalX: 50, focalY: 50 },
+            { name: "N'Zoth", title: "The Corruptor", faction: "Old Gods", aliases: ["nzoth", "n'zoth"], image: "https://warcraft.wiki.gg/images/thumb/N%27Zoth_HS_Mercenaries.jpg/800px-N%27Zoth_HS_Mercenaries.jpg?8fbbd4", focalX: 50, focalY: 45 },
+            { name: "Sargeras", title: "The Dark Titan", faction: "Burning Legion", aliases: ["sargeras"], image: "https://warcraft.wiki.gg/images/thumb/Sargeras_Gamescom_2017.png/1024px-Sargeras_Gamescom_2017.png?95d38f", focalX: 50, focalY: 35 },
+            { name: "Kil'jaeden", title: "The Deceiver", faction: "Burning Legion", aliases: ["kiljaeden", "kil'jaeden", "kj"], image: "https://warcraft.wiki.gg/images/thumb/Kil%27jaeden_HS.jpg/800px-Kil%27jaeden_HS.jpg?7da8b5", focalX: 50, focalY: 35 },
+            { name: "Archimonde", title: "The Defiler", faction: "Burning Legion", aliases: ["archimonde", "archi"], image: "https://warcraft.wiki.gg/images/Archimonde-WoD.jpg", focalX: 50, focalY: 35 },
+            { name: "Medivh", title: "The Last Guardian", faction: "Neutral", aliases: ["medivh", "guardian"], image: "https://warcraft.wiki.gg/images/Medivh_HotS_Art_2.jpg", focalX: 50, focalY: 30 },
+            { name: "Lor'themar Theron", title: "Regent Lord of Quel'Thalas", faction: "Horde / Blood Elves", aliases: ["lorthemar", "lor'themar", "theron"], image: "https://warcraft.wiki.gg/images/thumb/Lor%27themar_by_Bayard_Wu_Cropped.png/1024px-Lor%27themar_by_Bayard_Wu_Cropped.png?7cf0d5", focalX: 50, focalY: 30 },
+            { name: "Baine Bloodhoof", title: "High Chieftain of Tauren", faction: "Horde", aliases: ["baine", "baine bloodhoof"], image: "https://warcraft.wiki.gg/images/thumb/Glowei_Baine_Bloodhoof.jpg/800px-Glowei_Baine_Bloodhoof.jpg?8f94e5", focalX: 50, focalY: 35 },
+            { name: "Cairne Bloodhoof", title: "Former High Chieftain", faction: "Horde", aliases: ["cairne", "cairne bloodhoof"], image: "https://warcraft.wiki.gg/images/thumb/Cairne_Mercenaries_3.jpg/800px-Cairne_Mercenaries_3.jpg?c941e7", focalX: 50, focalY: 35 },
+            { name: "Genn Greymane", title: "King of Gilneas", faction: "Alliance", aliases: ["genn", "greymane", "genn greymane"], image: "https://warcraft.wiki.gg/images/Genn_Broken_Shore.PNG", focalX: 50, focalY: 30 },
+            { name: "Mekkatorque", title: "High Tinker of Gnomes", faction: "Alliance", aliases: ["mekkatorque", "gelbin mekkatorque", "gelbin"], image: "https://warcraft.wiki.gg/images/Mekkatorque_old_model.jpg", focalX: 50, focalY: 35 },
+            { name: "Muradin Bronzebeard", title: "Mountain King", faction: "Alliance", aliases: ["muradin", "muradin bronzebeard"], image: "https://warcraft.wiki.gg/images/thumb/Muradin_Glenn_Rane.jpg/800px-Muradin_Glenn_Rane.jpg?44425c", focalX: 50, focalY: 35 },
+            { name: "Magni Bronzebeard", title: "The Speaker", faction: "Neutral / Alliance", aliases: ["magni", "magni bronzebeard"], image: "https://warcraft.wiki.gg/images/thumb/King_Magni_Bronzebeard.jpg/800px-King_Magni_Bronzebeard.jpg?b963f4", focalX: 50, focalY: 35 },
+            { name: "Uther the Lightbringer", title: "First Paladin of the Silver Hand", faction: "Alliance", aliases: ["uther", "uther the lightbringer"], image: "https://warcraft.wiki.gg/images/thumb/UthersTombBfA.jpg/1920px-UthersTombBfA.jpg?462e7b", focalX: 50, focalY: 30 },
+            { name: "Tirion Fordring", title: "Highlord of the Argent Crusade", faction: "Neutral / Alliance", aliases: ["tirion", "tirion fordring"], image: "https://warcraft.wiki.gg/images/Tirion_Raneman_Cropped.jpg", focalX: 50, focalY: 30 },
+            { name: "Bolvar Fordragon", title: "The Fire Lich King / Highlord", faction: "Scourge / Alliance", aliases: ["bolvar", "bolvar fordragon"], image: "https://warcraft.wiki.gg/images/Shadowlands_Cinematic_artstation_3.jpg", focalX: 50, focalY: 35 },
+            { name: "Alleria Windrunner", title: "Void Elf Leader", faction: "Alliance", aliases: ["alleria", "alleria windrunner"], image: "https://warcraft.wiki.gg/images/thumb/AlleriaWindrunner-TWW.png/800px-AlleriaWindrunner-TWW.png?4a5b76", focalX: 50, focalY: 30 },
+            { name: "Turalyon", title: "High Commander of Army of Light", faction: "Alliance", aliases: ["turalyon", "high commander turalyon"], image: "https://warcraft.wiki.gg/images/Turalyon-profile.png", focalX: 50, focalY: 30 },
+            { name: "Prophet Velen", title: "Leader of the Draenei", faction: "Alliance", aliases: ["velen", "prophet velen"], image: "https://warcraft.wiki.gg/images/Prophet_Velen_TCG.jpg", focalX: 50, focalY: 30 },
+            { name: "Chen Stormstout", title: "Legendary Brewmaster", faction: "Neutral", aliases: ["chen", "chen stormstout"], image: "https://warcraft.wiki.gg/images/Chen_Stormstout_Cinematic_2.jpg", focalX: 50, focalY: 35 },
+            { name: "Wrathion", title: "The Black Prince", faction: "Black Dragonflight", aliases: ["wrathion"], image: "https://warcraft.wiki.gg/images/thumb/Wrathion_in_Visions_of_N%27Zoth_cinematic.png/800px-Wrathion_in_Visions_of_N%27Zoth_cinematic.png?de94df", focalX: 50, focalY: 35 },
+            { name: "Bwonsamdi", title: "Loa of Grave and Death", faction: "Zandalar Loa", aliases: ["bwonsamdi", "loa of death"], image: "https://warcraft.wiki.gg/images/thumb/Bwonsamdi_in_Zuldazar.png/800px-Bwonsamdi_in_Zuldazar.png?21b0e5", focalX: 50, focalY: 30 },
+            { name: "Algalon the Observer", title: "Herald of the Titans", faction: "Titans", aliases: ["algalon", "algalon the observer"], image: "https://warcraft.wiki.gg/images/Algalon_the_Observer.jpg", focalX: 50, focalY: 35 }
         ];
 
-        // Zoom levels for character guesses 1 through 6
-        // Guess 1: 500% zoom (Super zoomed in)
-        // Guess 2: 400%
-        // Guess 3: 300%
-        // Guess 4: 200%
-        // Guess 5: 150%
-        // Guess 6 / Game Over: 100% (Fully zoomed out)
         const ZOOM_LEVELS = [900, 800, 600, 400, 300, 100];
         const MAX_CHARACTER_GUESSES = 6;
+        const MAX_ROUND_GUESSES = 10;
 
         // ==================================================================
         // STATE MANAGEMENT
@@ -654,11 +690,11 @@
             score: 0,
             highScore: parseInt(localStorage.getItem('wow_guesser_highscore')) || 0,
             streak: 0,
+            roundGuessesMade: 0, // Track total guesses in current 10-guess run
 
             // Dungeon state
             dungeon: {
                 hintsRevealed: 0,
-                playedCount: 0,
                 currentIndex: 0,
                 currentDungeon: null,
                 selectedExpansions: [],
@@ -680,6 +716,7 @@
             score: document.getElementById('header-score'),
             highScore: document.getElementById('header-highscore'),
             streak: document.getElementById('header-streak'),
+            headerGuessCount: document.getElementById('header-guess-count'),
             tabDungeon: document.getElementById('tab-dungeon'),
             tabCharacter: document.getElementById('tab-character'),
             viewDungeons: document.getElementById('view-dungeons'),
@@ -740,7 +777,14 @@
             btnCharSkip: document.getElementById('btn-char-skip'),
             charFeedbackMsg: document.getElementById('char-feedback-message'),
             charFeedbackText: document.getElementById('char-feedback-text'),
-            charFeedbackIcon: document.getElementById('char-feedback-icon')
+            charFeedbackIcon: document.getElementById('char-feedback-icon'),
+
+            // Round End Summary Modal
+            roundEndModal: document.getElementById('round-end-modal'),
+            finalRoundScore: document.getElementById('final-round-score'),
+            finalRoundStreak: document.getElementById('final-round-streak'),
+            finalRoundHighScore: document.getElementById('final-round-highscore'),
+            btnRestartRound: document.getElementById('btn-restart-round')
         };
 
         // ==================================================================
@@ -792,8 +836,55 @@
             loadNextCharacter();
         }
 
+        function restartFullRound() {
+            state.score = 0;
+            state.streak = 0;
+            state.roundGuessesMade = 0;
+            updateStatsUI();
+            elements.roundEndModal.classList.add('hidden');
+
+            loadNextDungeon();
+            loadNextCharacter();
+        }
+
+        function incrementRoundProgress() {
+            state.roundGuessesMade++;
+            updateStatsUI();
+
+            if (state.roundGuessesMade >= MAX_ROUND_GUESSES) {
+                showRoundEndSummary();
+                return true;
+            }
+            return false;
+        }
+
+        function showRoundEndSummary() {
+            elements.finalRoundScore.textContent = state.score;
+            elements.finalRoundStreak.textContent = state.streak;
+            elements.finalRoundHighScore.textContent = state.highScore;
+            elements.roundEndModal.classList.remove('hidden');
+            triggerConfetti();
+        }
+
         function switchTab(tab) {
-            state.activeTab = tab;
+            // Only reset if actually switching to a different tab
+            if (state.activeTab !== tab) {
+                state.activeTab = tab;
+
+                // Reset current round stats on tab switch
+                state.score = 0;
+                state.streak = 0;
+                state.roundGuessesMade = 0;
+                updateStatsUI();
+
+                // Load fresh targets for the new tab
+                if (tab === 'dungeon') {
+                    loadNextDungeon();
+                } else {
+                    loadNextCharacter();
+                }
+            }
+
             if (tab === 'dungeon') {
                 elements.tabDungeon.classList.add('active');
                 elements.tabCharacter.classList.remove('active');
@@ -856,7 +947,6 @@
 
             elements.charZoomText.textContent = `${zoomPercent}%`;
 
-            // Transform origin shifts focus to key features (face, armor, weapon)
             const focalX = char.focalX || 50;
             const focalY = char.focalY || 35;
 
@@ -896,7 +986,6 @@
         }
 
         function handleCorrectCharacterGuess() {
-            // Points scaled based on how early they guessed
             const pointsByTry = [250, 200, 150, 100, 75, 50];
             const earnedPoints = pointsByTry[state.character.guessesMade] || 50;
 
@@ -910,7 +999,6 @@
             updateStatsUI();
             triggerConfetti();
 
-            // Fully zoom out to 100% to reveal image
             state.character.guessesMade = MAX_CHARACTER_GUESSES - 1;
             elements.charImage.style.transform = `scale(1)`;
             elements.charZoomText.textContent = `100%`;
@@ -924,13 +1012,18 @@
 
             elements.charAnswerOverlay.classList.remove('hidden');
             state.character.currentIndex++;
+
+            incrementRoundProgress();
         }
 
         function handleIncorrectCharacterGuess(guessedText) {
             state.character.guessesMade++;
             state.character.history.push(guessedText);
 
-            // Append to guess history list
+            // Deduct 10 points for an incorrect guess, keeping score at or above 0
+            state.score = Math.max(0, state.score - 10);
+            updateStatsUI();
+
             elements.charGuessesContainer.classList.remove('hidden');
             const badge = document.createElement('span');
             badge.className = 'bg-red-950/80 border border-red-700/60 text-red-300 px-2.5 py-1 rounded-md text-xs line-through';
@@ -940,12 +1033,11 @@
             renderGuessDots();
 
             if (state.character.guessesMade >= MAX_CHARACTER_GUESSES) {
-                // Out of guesses! Game over for this character
                 handleCharacterGameOver();
             } else {
                 updateCharacterZoomImage();
                 const triesLeft = MAX_CHARACTER_GUESSES - state.character.guessesMade;
-                showCharFeedback(`Incorrect! Zooming out slightly. ${triesLeft} tries left.`, false);
+                showCharFeedback(`Incorrect! (-10 pts) Zooming out. ${triesLeft} tries left.`, false);
             }
         }
 
@@ -953,7 +1045,6 @@
             state.streak = 0;
             updateStatsUI();
 
-            // Reveal full image
             elements.charImage.style.transform = `scale(1)`;
             elements.charZoomText.textContent = `100%`;
 
@@ -966,6 +1057,8 @@
 
             elements.charAnswerOverlay.classList.remove('hidden');
             state.character.currentIndex++;
+
+            incrementRoundProgress();
         }
 
         function updateCharAutocomplete(query) {
@@ -1053,10 +1146,9 @@
 
             state.dungeon.currentDungeon = state.dungeon.filteredPool[state.dungeon.currentIndex];
             state.dungeon.hintsRevealed = 0;
-            state.dungeon.playedCount++;
 
             // Reset UI
-            elements.progressNum.textContent = state.dungeon.playedCount;
+            elements.progressNum.textContent = Math.min(state.roundGuessesMade + 1, MAX_ROUND_GUESSES);
             elements.input.value = '';
             elements.autocompleteList.classList.add('hidden');
             elements.answerOverlay.classList.add('hidden');
@@ -1157,10 +1249,15 @@
             elements.answerOverlay.classList.remove('hidden');
 
             state.dungeon.currentIndex++;
+            incrementRoundProgress();
         }
 
         function handleIncorrectGuess() {
-            showFeedback("Incorrect dungeon name! Try again or unlock a hint.", false);
+            // Deduct 10 points for an incorrect guess, keeping score at or above 0
+            state.score = Math.max(0, state.score - 10);
+            updateStatsUI();
+
+            showFeedback("Incorrect dungeon name! (-10 pts) Try again or unlock a hint.", false);
         }
 
         function handleSkip() {
@@ -1174,6 +1271,7 @@
             elements.answerOverlay.classList.remove('hidden');
 
             state.dungeon.currentIndex++;
+            incrementRoundProgress();
         }
 
         function showFeedback(msg, isSuccess) {
@@ -1193,6 +1291,8 @@
             elements.score.textContent = state.score;
             elements.highScore.textContent = state.highScore;
             elements.streak.textContent = state.streak;
+            elements.headerGuessCount.textContent = `${Math.min(state.roundGuessesMade + 1, MAX_ROUND_GUESSES)}/${MAX_ROUND_GUESSES}`;
+            elements.progressNum.textContent = Math.min(state.roundGuessesMade + 1, MAX_ROUND_GUESSES);
         }
 
         function triggerConfetti() {
@@ -1200,7 +1300,7 @@
                 confetti({
                     particleCount: 80,
                     spread: 70,
-                    origin: {y: 0.6},
+                    origin: { y: 0.6 },
                     colors: ['#f8b700', '#ffd700', '#22c55e', '#ffffff']
                 });
             } catch (e) { }
@@ -1264,7 +1364,11 @@
 
             elements.btnSkip.addEventListener('click', handleSkip);
             elements.btnRevealHint.addEventListener('click', revealNextHint);
-            elements.btnNextOverlay.addEventListener('click', loadNextDungeon);
+            elements.btnNextOverlay.addEventListener('click', () => {
+                if (state.roundGuessesMade < MAX_ROUND_GUESSES) {
+                    loadNextDungeon();
+                }
+            });
 
             // Character Form & Input
             elements.charGuessForm.addEventListener('submit', (e) => {
@@ -1287,7 +1391,13 @@
             });
 
             elements.btnCharSkip.addEventListener('click', handleCharacterGameOver);
-            elements.btnNextChar.addEventListener('click', loadNextCharacter);
+            elements.btnNextChar.addEventListener('click', () => {
+                if (state.roundGuessesMade < MAX_ROUND_GUESSES) {
+                    loadNextCharacter();
+                }
+            });
+
+            elements.btnRestartRound.addEventListener('click', restartFullRound);
 
             // Document click to hide autocomplete dropdowns
             document.addEventListener('click', (e) => {
